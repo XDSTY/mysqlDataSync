@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dbs>
+    <db id="origin">
+        <url>119.23.240.184:3306/test</url>
+        <username>root</username>
+        <password>Zhangfuhua123!</password>
+    </db>
+    <db id="target">
+        <url>119.23.240.184:3306/test</url>
+        <username>admin</username>
+        <password>Zhangfuhua</password>
+    </db>
+</dbs>
