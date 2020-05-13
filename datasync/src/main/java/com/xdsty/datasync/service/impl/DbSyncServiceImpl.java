@@ -4,6 +4,8 @@ import com.xdsty.datasync.db.sync.DBSync;
 import com.xdsty.datasync.db.sync.DBSyncFactory;
 import com.xdsty.datasync.pojo.DBInfo;
 import com.xdsty.datasync.service.DbSyncService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 /**
@@ -12,6 +14,8 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class DbSyncServiceImpl implements DbSyncService {
+
+    private static final Logger log = LoggerFactory.getLogger(DbSyncServiceImpl.class);
 
     @Override
     public boolean sync(DBInfo fromDbInfo, DBInfo toDbInfo) {
@@ -22,7 +26,7 @@ public class DbSyncServiceImpl implements DbSyncService {
         try {
             dbSync.sync(fromDbInfo, toDbInfo);
         } catch (Exception e) {
-            throw new RuntimeException(e.getMessage());
+            log.error("数据库同步失败", e);
         }
         return true;
     }

@@ -1,6 +1,7 @@
 package com.xdsty.datasync.xml;
 
 import com.xdsty.datasync.DatasyncApplication;
+import com.xdsty.datasync.enums.DbTypeEnum;
 import com.xdsty.datasync.pojo.DBInfo;
 import org.apache.commons.lang.StringUtils;
 import org.dom4j.Document;
@@ -50,10 +51,17 @@ public class XmlParser {
             String url = e.elementText("url");
             String username = e.elementText("username");
             String password = e.elementText("password");
-            if(StringUtils.isEmpty(url) || StringUtils.isEmpty(username) || StringUtils.isEmpty(password)){
+            String dbType = e.elementText("dbType");
+            if(StringUtils.isEmpty(url) || StringUtils.isEmpty(username) || StringUtils.isEmpty(password)
+            || StringUtils.isEmpty(dbType)){
                 log.error("数据库信息不完整");
                 DatasyncApplication.closeContext();
             }
+            dbInfo.setUrl("jdbc:mysql://" + url);
+            dbInfo.setUsername(username);
+            dbInfo.setPassword(password);
+            dbInfo.setDbType(dbType);
+            dbInfo.setDriver(DbTypeEnum.getDriverByType(dbType));
             dbInfos.add(dbInfo);
         });
         return dbInfos;

@@ -52,7 +52,7 @@ public class MySqlInfoInit implements DBInit {
             MTable table = new MTable();
             ResultSet set = conn.prepareStatement(MySQLCommonSql.getShowCreateTable(tableName)).executeQuery();
             if (set.next()) {
-                table.setCreateTableSql(set.getString(2));
+                table.initTable(set.getString(2));
             }
             table.setTableName(tableName);
             tables.add(table);

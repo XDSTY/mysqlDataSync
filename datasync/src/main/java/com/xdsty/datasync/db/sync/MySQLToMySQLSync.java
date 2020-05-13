@@ -41,20 +41,17 @@ public class MySQLToMySQLSync implements DBSync {
     }
 
     @Override
-    public void sync(DBInfo fromDbInfo, DBInfo toDbInfo) {
-        try {
-            initDBInfo(fromDbInfo, toDbInfo);
-            syncStructure(fromDbInfo, toDbInfo);
-            syncData(fromDbInfo, toDbInfo);
-        } catch (Exception e) {
-            throw new RuntimeException(e.getMessage());
-        }
+    public void sync(DBInfo fromDbInfo, DBInfo toDbInfo) throws SQLException, ClassNotFoundException {
+        initDBInfo(fromDbInfo, toDbInfo);
+        syncStructure(fromDbInfo, toDbInfo);
+        syncData(fromDbInfo, toDbInfo);
     }
 
     /**
      * 初始化数据库信息
+     *
      * @param fromDbInfo 源db
-     * @param toDbInfo 目标db
+     * @param toDbInfo   目标db
      * @throws SQLException
      * @throws ClassNotFoundException
      */
@@ -78,26 +75,26 @@ public class MySQLToMySQLSync implements DBSync {
                 Map<String, MTable> toTablesMap = toDbInfo.getTables().stream().collect(Collectors.toMap(MTable::getTableName, a -> a));
 
                 MTable table;
-                for(MTable fromTable : fromDbInfo.getTables()){
+                for (MTable fromTable : fromDbInfo.getTables()) {
                     table = toTablesMap.get(fromTable.getTableName());
                     // 新建
-                    if(table == null){
+                    if (table == null) {
                         createTargetTable(fromTable, toDbInfo.getConnection());
-                    }else{
+                    } else {
                         // 同步结构
                         syncColumn(fromTable, table, toDbInfo.getConnection());
                         syncIndex(fromTable, table, toDbInfo.getConnection());
                     }
                 }
-                for(MTable toTable : toDbInfo.getTables()){
+                for (MTable toTable : toDbInfo.getTables()) {
                     table = fromTablesMap.get(toTable.getTableName());
-                    if(table == null){
+                    if (table == null) {
                         deleteTable(toTable, toDbInfo.getConnection());
                     }
                 }
                 //同步完后需要更新目标数据库的tables
                 toDbInfo.setTables(fromDbInfo.getTables());
-            }catch (SQLException e){
+            } catch (SQLException e) {
                 log.error("数据库结构同步失败，源数据库{}, 目标数据库{}", fromDbInfo.getUrl(), toDbInfo.getUrl(), e);
                 throw e;
             }
@@ -111,6 +108,7 @@ public class MySQLToMySQLSync implements DBSync {
 
     /**
      * 同步数据
+     *
      * @param fromDbInfo
      * @param toDbInfo
      * @throws SQLException
@@ -129,6 +127,7 @@ public class MySQLToMySQLSync implements DBSync {
 
     /**
      * 设置sql
+     *
      * @param fromDbInfo
      * @param toDbInfo
      * @throws SQLException
@@ -141,8 +140,9 @@ public class MySQLToMySQLSync implements DBSync {
 
     /**
      * 拼接表的数据sql
+     *
      * @param table 表
-     * @param conn 数据库connection
+     * @param conn  数据库connection
      * @return 数据sql
      * @throws SQLException
      */
@@ -176,7 +176,7 @@ public class MySQLToMySQLSync implements DBSync {
                 insertSql.append("'").append(set.getString(columns.get(columns.size() - 1))).append("')");
             }
             // 没有数据
-            if(firstRow){
+            if (firstRow) {
                 return null;
             }
             insertSql.append(" ON DUPLICATE KEY UPDATE ");
@@ -194,13 +194,14 @@ public class MySQLToMySQLSync implements DBSync {
 
     /**
      * 执行更新sql
+     *
      * @param toDbInfo 目标db
      * @throws SQLException
      */
     private void executeBatchInsert(DBInfo toDbInfo) throws SQLException {
         Connection conn = toDbInfo.getConnection();
         for (MTable table : toDbInfo.getTables()) {
-            if(StringUtils.isEmpty(table.getInsertSql())){
+            if (StringUtils.isEmpty(table.getInsertSql())) {
                 continue;
             }
             try {
@@ -217,8 +218,9 @@ public class MySQLToMySQLSync implements DBSync {
 
     /**
      * 创建目标表
+     *
      * @param table 表
-     * @param conn 目标数据库connection
+     * @param conn  目标数据库connection
      * @throws SQLException
      */
     private void createTargetTable(MTable table, Connection conn) throws SQLException {
@@ -232,8 +234,9 @@ public class MySQLToMySQLSync implements DBSync {
 
     /**
      * 删除表
+     *
      * @param table 表
-     * @param conn 数据库连接
+     * @param conn  数据库连接
      * @throws SQLException
      */
     private void deleteTable(MTable table, Connection conn) throws SQLException {
@@ -242,9 +245,10 @@ public class MySQLToMySQLSync implements DBSync {
 
     /**
      * 同步表column
+     *
      * @param fromTable 源表
-     * @param toTable 目标表
-     * @param conn 数据库连接
+     * @param toTable   目标表
+     * @param conn      数据库连接
      * @throws SQLException
      */
     private void syncColumn(MTable fromTable, MTable toTable, Connection conn) throws SQLException {

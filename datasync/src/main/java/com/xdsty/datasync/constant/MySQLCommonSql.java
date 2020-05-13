@@ -64,8 +64,6 @@ public class MySQLCommonSql {
 
     private static final String DROP_INDEX = "ALTER TABLE {0} DROP KEY {1}";
 
-    private static final String DROP_PRIMARY_KEY = "ALTER TABLE {0} DROP PRIMARY KEY";
-
     /**
      * 删除列
      */
@@ -106,14 +104,6 @@ public class MySQLCommonSql {
 
     public static String getDropColumn(Column column){
         return MessageFormat.format(DROP_COLUMN, column.getTableName(), column.getColumnName());
-    }
-
-    public static String getAddPrimaryKey(Index index){
-        return MessageFormat.format(ADD_PRIMARY_KEY, index.getTableName(), index.getColumn());
-    }
-
-    public static String getDropPrimaryKey(Index index){
-        return MessageFormat.format(DROP_PRIMARY_KEY, index.getTableName());
     }
 
     public static String getAddIndex(Index index){

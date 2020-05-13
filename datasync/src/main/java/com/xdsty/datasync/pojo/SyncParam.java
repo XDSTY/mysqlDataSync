@@ -17,7 +17,7 @@ public class SyncParam {
 
     private String fromDbPassword;
 
-    private Integer fromDbType;
+    private String fromDbType;
 
     private String toDbUrl;
 
@@ -25,5 +25,5 @@ public class SyncParam {
 
     private String toDbPassword;
 
-    private Integer toDbType;
+    private String toDbType;
 }

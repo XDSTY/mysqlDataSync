@@ -24,7 +24,7 @@ public class DBInfo {
      * 数据库类型
      * MYSQL SQLServer ORACLE
      */
-    private Integer dbType;
+    private String dbType;
 
     private String driver;
 

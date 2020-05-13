@@ -8,30 +8,30 @@ public enum DbTypeEnum {
     /**
      * MySQL
      */
-    MYSQL(1, "MYSQL", "com.mysql.cj.jdbc.Driver"),
+    MYSQL("mysql", "MYSQL", "com.mysql.cj.jdbc.Driver"),
     /**
      * SQLSERVER
      */
-    SQLSERVER(2, "SQLSERVER", ""),
+    SQLSERVER("sqlserver", "SQLSERVER", ""),
 
     /**
      * ORACLE
      */
-    ORACLE(3, "ORACLE", "");
+    ORACLE("oracle", "ORACLE", "");
 
-    private Integer value;
+    private String value;
 
     private String desc;
 
     private String driver;
 
-    DbTypeEnum(Integer value, String desc, String driver) {
+    DbTypeEnum(String value, String desc, String driver) {
         this.value = value;
         this.desc = desc;
         this.driver = driver;
     }
 
-    public static String getDriverByType(Integer dbType){
+    public static String getDriverByType(String dbType){
         for(DbTypeEnum dbTypeEnum : values()){
             if(dbTypeEnum.value.equals(dbType)){
                 return dbTypeEnum.driver;
@@ -40,7 +40,7 @@ public enum DbTypeEnum {
         return null;
     }
 
-    public Integer getValue() {
+    public String getValue() {
         return value;
     }
 
