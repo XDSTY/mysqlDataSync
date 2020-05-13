@@ -36,7 +36,7 @@ public class MySqlInfoInit implements DBInit {
         dbInfo.initConnection();
         // 获取所有表
         initTableInfo(dbInfo);
-        initTableColumn(dbInfo);
+        initTableColumnWithSchema(dbInfo);
         initTableIndex(dbInfo);
     }
 
@@ -81,32 +81,6 @@ public class MySqlInfoInit implements DBInit {
         }
         log.error("获取源数据库表成功，{}", DateUtil.date2String(new Date(), DateUtil.DATE_TIME_PATTERN));
         return list.stream().sorted(Comparator.comparing(String::toString)).collect(Collectors.toList());
-    }
-
-    /**
-     * 初始化表的列信息
-     * @param dbInfo 数据库信息
-     */
-    private void initTableColumn(DBInfo dbInfo) throws SQLException {
-        if(CollectionUtils.isEmpty(dbInfo.getTables())){
-            return;
-        }
-        Connection conn = dbInfo.getConnection();
-        List<MTable> tables = dbInfo.getTables();
-        for(MTable table : tables){
-            ResultSet set = conn.prepareStatement(MySQLCommonSql.getSelectColumns(table.getTableName())).executeQuery();
-            List<Column> columns = new LinkedList<>();
-            while (set.next()){
-                Column column = new Column();
-                column.setColumnName(set.getString(Column.FIELD));
-                column.setType(set.getString(Column.TYPE));
-                column.setCanBeNull(set.getString(Column.NULL).equals(Column.CAN_NULL) ? Boolean.TRUE : Boolean.FALSE);
-                column.setDefaultVal(set.getString(Column.DEFAULT));
-                column.setTableName(table.getTableName());
-                columns.add(column);
-            }
-            table.setColumns(columns.stream().sorted(Comparator.comparing(Column::getColumnName)).collect(Collectors.toList()));
-        }
     }
 
     /**

@@ -8,12 +8,12 @@ import com.xdsty.datasync.pojo.DBInfo;
 import com.xdsty.datasync.pojo.Index;
 import com.xdsty.datasync.pojo.MTable;
 import com.xdsty.datasync.util.DateUtil;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -79,10 +79,12 @@ public class MySQLToMySQLSync implements DBSync {
                     table = toTablesMap.get(fromTable.getTableName());
                     // 新建
                     if (table == null) {
-                        createTargetTable(fromTable, toDbInfo.getConnection());
+                        executeSql(fromTable.getCreateTableSql(), toDbInfo.getConnection());
                     } else {
+                        // 同步表的字符集、引擎、注释
+                        syncTableInfo(fromTable, table);
                         // 同步column
-//                        syncColumn(fromTable, table, toDbInfo.getConnection());
+                        syncColumn(fromTable, table, toDbInfo.getConnection());
                         // 同步索引
 //                        syncIndex(fromTable, table, toDbInfo.getConnection());
                     }
@@ -90,7 +92,7 @@ public class MySQLToMySQLSync implements DBSync {
                 for (MTable toTable : toDbInfo.getTables()) {
                     table = fromTablesMap.get(toTable.getTableName());
                     if (table == null) {
-                        deleteTable(toTable, toDbInfo.getConnection());
+                        executeSql(MySQLCommonSql.getDropTable(toTable.getTableName()), toDbInfo.getConnection());
                     }
                 }
                 //同步完后需要更新目标数据库的tables
@@ -108,8 +110,25 @@ public class MySQLToMySQLSync implements DBSync {
     }
 
     /**
+     * 同步表的信息 字符集 引擎 注释
+     * @param fromTable
+     * @param toTable
+     */
+    private void syncTableInfo(MTable fromTable, MTable toTable) throws SQLException {
+        Connection conn = toTable.getDbInfo().getConnection();
+        if(!fromTable.getCharset().equals(toTable.getCharset())){
+            executeSql(MySQLCommonSql.getTableCharset(fromTable), conn);
+        }
+        if(!fromTable.getEngine().equals(toTable.getEngine())){
+            executeSql(MySQLCommonSql.getTableEngine(fromTable), conn);
+        }
+        if(StringUtils.isNotEmpty(fromTable.getComment()) && fromTable.getComment().equals(toTable.getComment())){
+            executeSql(MySQLCommonSql.getTableComment(fromTable), conn);
+        }
+    }
+
+    /**
      * 同步数据
-     *
      * @param fromDbInfo
      * @param toDbInfo
      * @throws SQLException
@@ -128,7 +147,6 @@ public class MySQLToMySQLSync implements DBSync {
 
     /**
      * 设置sql
-     *
      * @param fromDbInfo
      * @param toDbInfo
      * @throws SQLException
@@ -195,7 +213,6 @@ public class MySQLToMySQLSync implements DBSync {
 
     /**
      * 执行更新sql
-     *
      * @param toDbInfo 目标db
      * @throws SQLException
      */
@@ -218,72 +235,12 @@ public class MySQLToMySQLSync implements DBSync {
     }
 
     /**
-     * 创建目标表
-     *
-     * @param table 表
-     * @param conn  目标数据库connection
-     * @throws SQLException
-     */
-    private void createTargetTable(MTable table, Connection conn) throws SQLException {
-        try {
-            executeSql(table.getCreateTableSql(), conn);
-        } catch (SQLException e) {
-            log.error("创建表失败", e);
-            throw e;
-        }
-    }
-
-    /**
-     * 删除表
-     *
-     * @param table 表
-     * @param conn  数据库连接
-     * @throws SQLException
-     */
-    private void deleteTable(MTable table, Connection conn) throws SQLException {
-        executeSql(MySQLCommonSql.getDropTable(table.getTableName()), conn);
-    }
-
-//    /**
-//     * 同步表column
-//     *
-//     * @param fromTable 源表
-//     * @param toTable   目标表
-//     * @param conn      数据库连接
-//     * @throws SQLException
-//     */
-//    private void syncColumn(MTable fromTable, MTable toTable, Connection conn) throws SQLException {
-//        List<Column> fromColumns = fromTable.getColumns();
-//        List<Column> toColumns = toTable.getColumns();
-//        Map<String, Column> fromColumnMap = fromColumns.stream().collect(Collectors.toMap(Column::getColumnName, a -> a));
-//        Map<String, Column> toColumnMap = toColumns.stream().collect(Collectors.toMap(Column::getColumnName, a -> a));
-//        Column column;
-//        // 找到新建和修改的column
-//        for (Column col : fromColumns) {
-//            column = toColumnMap.get(col.getColumnName());
-//            // 新增
-//            if (column == null) {
-//                createColumn(col, conn);
-//            } else if (!column.equals(col)) {
-//                //修改
-//                modifyColumn(col, conn);
-//            }
-//        }
-//        // 找到删除的
-//        for (Column col : toColumns) {
-//            if (!fromColumnMap.containsKey(col.getColumnName())) {
-//                deleteColumn(col, conn);
-//            }
-//        }
-//    }
-
-    /**
      * 同步表column
      * @param fromTable 源表
      * @param toTable 目标表
      * @param conn 目标表数据库连接
      */
-    private void syncColumnV1(MTable fromTable, MTable toTable, Connection conn){
+    private void syncColumn(MTable fromTable, MTable toTable, Connection conn){
         List<Column> fromColumns = fromTable.getColumns();
         List<Column> toColumns = toTable.getColumns();
         Map<String, Column> fromColumnMap = fromColumns.stream().collect(Collectors.toMap(Column::getColumnName, c -> c));
@@ -291,47 +248,32 @@ public class MySQLToMySQLSync implements DBSync {
 
         fromColumns.forEach(fromColumn -> {
             Column column;
-            // 目标表中不存在该column
-            if((column = toColumnMap.get(fromColumn.getColumnName())) == null){
+            try {
+                // 目标表中不存在该column
+                if ((column = toColumnMap.get(fromColumn.getColumnName())) == null) {
+                    executeSql(MySQLCommonSql.getAddColumnSql(fromColumn), conn);
+                } else {
+                    // 对column进行更新
+                    if(!fromColumn.equals(column)){
+                        executeSql(MySQLCommonSql.getAlterColumn(fromColumn), conn);
+                    }
+                }
+            }catch (SQLException e){
+                log.error("列{}更新失败{}", fromColumn, e);
+            }
+        });
+
+        toColumns.forEach(toColumn -> {
+            Column column = fromColumnMap.get(toColumn.getColumnName());
+            // 该列已被删除
+            if(column == null){
                 try {
-                    createColumn(fromColumn, conn);
+                    executeSql(MySQLCommonSql.getDropColumn(toColumn), conn);
                 } catch (SQLException e) {
-                    log.error("列{}同步失败{}", fromColumn, e);
+                    log.error("删除目标表列{}失败", toColumn.toString(), e);
                 }
             }
         });
-    }
-
-    /**
-     * 创建列
-     *
-     * @param column 列信息
-     * @param conn   数据库链接
-     */
-    private void createColumn(Column column, Connection conn) throws SQLException {
-        executeSql(MySQLCommonSql.getAddColumnSql(column), conn);
-    }
-
-    /**
-     * 修改column
-     *
-     * @param column 字段信息
-     * @param conn   连接
-     * @throws SQLException
-     */
-    private void modifyColumn(Column column, Connection conn) throws SQLException {
-        executeSql(MySQLCommonSql.getAlterColumn(column), conn);
-    }
-
-    /**
-     * 删除字段
-     *
-     * @param column 字段
-     * @param conn   连接
-     * @throws SQLException
-     */
-    private void deleteColumn(Column column, Connection conn) throws SQLException {
-        executeSql(MySQLCommonSql.getDropColumn(column), conn);
     }
 
     private void syncIndex(MTable fromTable, MTable toTable, Connection conn) throws SQLException {
@@ -345,25 +287,17 @@ public class MySQLToMySQLSync implements DBSync {
                 continue;
             }
             if (idx != null) {
-                dropIndex(idx, conn);
+                executeSql(MySQLCommonSql.getDropIndex(idx), conn);
             }
-            addIndex(index, conn);
+            executeSql(MySQLCommonSql.getAddIndex(index), conn);
         }
         //找出已删除的索引
         for (Index index : toTable.getIndices()) {
             idx = fromTableIndexMap.get(index.getIndexName());
             if (!index.equals(idx) && !index.isPrimaryKey()) {
-                dropIndex(index, conn);
+                executeSql(MySQLCommonSql.getDropIndex(index), conn);
             }
         }
-    }
-
-    private void dropIndex(Index index, Connection conn) throws SQLException {
-        executeSql(MySQLCommonSql.getDropIndex(index), conn);
-    }
-
-    private void addIndex(Index index, Connection conn) throws SQLException {
-        executeSql(MySQLCommonSql.getAddIndex(index), conn);
     }
 
     private static void executeSql(String sql, Connection conn) throws SQLException {

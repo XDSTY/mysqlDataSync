@@ -4,6 +4,10 @@ import com.xdsty.datasync.enums.IndexTypeEnum;
 import com.xdsty.datasync.enums.IndexUniqueTypeEnum;
 import com.xdsty.datasync.pojo.Column;
 import com.xdsty.datasync.pojo.Index;
+import com.xdsty.datasync.pojo.MTable;
+import org.apache.commons.lang.StringUtils;
+
+import javax.xml.crypto.dsig.spec.XSLTTransformParameterSpec;
 import java.text.MessageFormat;
 
 /**
@@ -44,18 +48,22 @@ public class MySQLCommonSql {
      * {2} columnType
      * {3} defaultValue
      * {4} null or not null
+     * {5} auto_increment
+     * {6} comment
      */
-    private static final String ALTER_COLUMN = "ALTER TABLE {0} MODIFY COLUMN {1} {2} {3} {4}";
+    private static final String ALTER_COLUMN = "ALTER TABLE {0} MODIFY COLUMN {1} {2} {3} {4} {5} {6}";
 
     /**
      * 添加新的列
+     * {0} tableName
+     * {1} columnName
+     * {2} columnType
+     * {3} defaultValue
+     * {4} null or not null
+     * {5} auto_increment
+     * {6} comment
      */
-    private static final String ADD_COLUMN = "ALTER TABLE {0} ADD COLUMN {1} {2} DEFAULT {3}";
-
-    /**
-     * 添加主键
-     */
-    private static final String ADD_PRIMARY_KEY = "ALTER TABLE {0} ADD PRIMARY KEY ({1})";
+    private static final String ADD_COLUMN = "ALTER TABLE {0} ADD COLUMN {1} {2} {3} {4} {5} {6}";
 
     /**
      * 添加普通索引
@@ -74,44 +82,68 @@ public class MySQLCommonSql {
      */
     private static final String COLUMN_SCHEMA = "SELECT * from information_schema.columns WHERE table_name = '{0}'";
 
-    public static String getSelectTableSql(){
+    /**
+     * 修改表字符集
+     */
+    private static final String TABLE_CHARSET = "ALTER TABLE {0} DEFAULT CHARACTER SET {1}";
+
+    /**
+     * 修改表的注释
+     */
+    private static final String TABLE_COMMENT = "ALTER TABLE {0} COMMENT {1}";
+
+    /**
+     * 修改表引擎
+     */
+    private static final String TABLE_ENGINE = "ALTER TABLE {0} ENGINE = {1}";
+
+    public static String getSelectTableSql() {
         return SELECT_TABLES;
     }
 
-    public static String getShowCreateTable(String tableName){
+    public static String getShowCreateTable(String tableName) {
         return SHOW_CREATE_TABLE + tableName;
     }
 
-    public static String getDropTable(String tableName){
+    public static String getDropTable(String tableName) {
         return DROP_TABLE + tableName;
     }
 
-    public static String getSelectColumns(String tableName){
+    public static String getSelectColumns(String tableName) {
         return SHOW_COLUMNS + tableName;
     }
 
-    public static String getShowIndex(String tableName){
+    public static String getShowIndex(String tableName) {
         return SHOW_INDEX + tableName;
     }
 
-    public static String getAlterColumn(Column column){
+    public static String getAlterColumn(Column column) {
         return MessageFormat.format(ALTER_COLUMN,
                 column.getTableName(),
                 column.getColumnName(),
-                column.getType(),
-                column.getDefaultVal() != null ? "DEFAULT " + column.getDefaultVal() : "",
-                column.getCanBeNull() ? "" : "NOT NULL");
+                column.getColumnType(),
+                column.getColumnDefault() != null ? "DEFAULT " + column.getColumnDefault() : "",
+                column.getNullable().equals("YES") ? "DEFAULT NULL" : "NOT NULL",
+                "auto_increment".equals(column.getExtra()) ? "auto_increment" : "",
+                StringUtils.isNotEmpty(column.getColumnComment()) ? "comment " + column.getColumnComment() : "");
     }
 
-    public static String getAddColumnSql(Column column){
-        return MessageFormat.format(ADD_COLUMN, column.getTableName(), column.getColumnName(), column.getType(), column.getDefaultVal());
+    public static String getAddColumnSql(Column column) {
+        return MessageFormat.format(ADD_COLUMN,
+                column.getTableName(),
+                column.getColumnName(),
+                column.getColumnType(),
+                column.getColumnDefault() != null ? "DEFAULT " + column.getColumnDefault() : "",
+                column.getNullable().equals("YES") ? "DEFAULT NULL" : "NOT NULL",
+                "auto_increment".equals(column.getExtra()) ? "auto_increment" : "",
+                StringUtils.isNotEmpty(column.getColumnComment()) ? "comment " + column.getColumnComment() : "");
     }
 
-    public static String getDropColumn(Column column){
+    public static String getDropColumn(Column column) {
         return MessageFormat.format(DROP_COLUMN, column.getTableName(), column.getColumnName());
     }
 
-    public static String getAddIndex(Index index){
+    public static String getAddIndex(Index index) {
         String keyPre = IndexUniqueTypeEnum.UNIQUE.getValue().equals(index.getIdxUniqueType()) ?
                 IndexUniqueTypeEnum.UNIQUE.getKey() :
                 (IndexTypeEnum.FULLTEXT.getValue().equals(index.getIndexType()) ? IndexTypeEnum.FULLTEXT.getName() : "");
@@ -122,11 +154,23 @@ public class MySQLCommonSql {
                 index.getColumn());
     }
 
-    public static String getDropIndex(Index index){
+    public static String getDropIndex(Index index) {
         return MessageFormat.format(DROP_INDEX, index.getTableName(), index.getIndexName());
     }
 
-    public static String getColumnSchema(String tableName){
+    public static String getColumnSchema(String tableName) {
         return MessageFormat.format(COLUMN_SCHEMA, tableName);
+    }
+
+    public static String getTableCharset(MTable table){
+        return MessageFormat.format(TABLE_CHARSET, table.getTableName(), table.getCharset());
+    }
+
+    public static String getTableEngine(MTable table){
+        return MessageFormat.format(TABLE_ENGINE, table.getTableName(), table.getEngine());
+    }
+
+    public static String getTableComment(MTable table){
+        return MessageFormat.format(TABLE_COMMENT, table.getTableName(), table.getComment());
     }
 }
