@@ -43,9 +43,6 @@ public class MTable {
      */
     private List<Column> columns;
 
-
-    private List<ColumnSchema> columnSchemas;
-
     /**
      * 索引列表
      */

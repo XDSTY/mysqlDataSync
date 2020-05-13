@@ -81,9 +81,10 @@ public class MySQLToMySQLSync implements DBSync {
                     if (table == null) {
                         createTargetTable(fromTable, toDbInfo.getConnection());
                     } else {
-                        // 同步结构
-                        syncColumn(fromTable, table, toDbInfo.getConnection());
-                        syncIndex(fromTable, table, toDbInfo.getConnection());
+                        // 同步column
+//                        syncColumn(fromTable, table, toDbInfo.getConnection());
+                        // 同步索引
+//                        syncIndex(fromTable, table, toDbInfo.getConnection());
                     }
                 }
                 for (MTable toTable : toDbInfo.getTables()) {
@@ -243,37 +244,62 @@ public class MySQLToMySQLSync implements DBSync {
         executeSql(MySQLCommonSql.getDropTable(table.getTableName()), conn);
     }
 
+//    /**
+//     * 同步表column
+//     *
+//     * @param fromTable 源表
+//     * @param toTable   目标表
+//     * @param conn      数据库连接
+//     * @throws SQLException
+//     */
+//    private void syncColumn(MTable fromTable, MTable toTable, Connection conn) throws SQLException {
+//        List<Column> fromColumns = fromTable.getColumns();
+//        List<Column> toColumns = toTable.getColumns();
+//        Map<String, Column> fromColumnMap = fromColumns.stream().collect(Collectors.toMap(Column::getColumnName, a -> a));
+//        Map<String, Column> toColumnMap = toColumns.stream().collect(Collectors.toMap(Column::getColumnName, a -> a));
+//        Column column;
+//        // 找到新建和修改的column
+//        for (Column col : fromColumns) {
+//            column = toColumnMap.get(col.getColumnName());
+//            // 新增
+//            if (column == null) {
+//                createColumn(col, conn);
+//            } else if (!column.equals(col)) {
+//                //修改
+//                modifyColumn(col, conn);
+//            }
+//        }
+//        // 找到删除的
+//        for (Column col : toColumns) {
+//            if (!fromColumnMap.containsKey(col.getColumnName())) {
+//                deleteColumn(col, conn);
+//            }
+//        }
+//    }
+
     /**
      * 同步表column
-     *
      * @param fromTable 源表
-     * @param toTable   目标表
-     * @param conn      数据库连接
-     * @throws SQLException
+     * @param toTable 目标表
+     * @param conn 目标表数据库连接
      */
-    private void syncColumn(MTable fromTable, MTable toTable, Connection conn) throws SQLException {
+    private void syncColumnV1(MTable fromTable, MTable toTable, Connection conn){
         List<Column> fromColumns = fromTable.getColumns();
         List<Column> toColumns = toTable.getColumns();
-        Map<String, Column> fromColumnMap = fromColumns.stream().collect(Collectors.toMap(Column::getColumnName, a -> a));
-        Map<String, Column> toColumnMap = toColumns.stream().collect(Collectors.toMap(Column::getColumnName, a -> a));
-        Column column;
-        // 找到新建和修改的column
-        for (Column col : fromColumns) {
-            column = toColumnMap.get(col.getColumnName());
-            // 新增
-            if (column == null) {
-                createColumn(col, conn);
-            } else if (!column.equals(col)) {
-                //修改
-                modifyColumn(col, conn);
+        Map<String, Column> fromColumnMap = fromColumns.stream().collect(Collectors.toMap(Column::getColumnName, c -> c));
+        Map<String, Column> toColumnMap = toColumns.stream().collect(Collectors.toMap(Column::getColumnName, c -> c));
+
+        fromColumns.forEach(fromColumn -> {
+            Column column;
+            // 目标表中不存在该column
+            if((column = toColumnMap.get(fromColumn.getColumnName())) == null){
+                try {
+                    createColumn(fromColumn, conn);
+                } catch (SQLException e) {
+                    log.error("列{}同步失败{}", fromColumn, e);
+                }
             }
-        }
-        // 找到删除的
-        for (Column col : toColumns) {
-            if (!fromColumnMap.containsKey(col.getColumnName())) {
-                deleteColumn(col, conn);
-            }
-        }
+        });
     }
 
     /**
