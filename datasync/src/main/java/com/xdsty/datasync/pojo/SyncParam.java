@@ -4,7 +4,7 @@ import lombok.Data;
 import lombok.ToString;
 
 /**
- * @author 张富华 (fuhua.zhang@ucarinc.com)
+ * @author 张富华
  * @date 2020/4/2 11:19
  */
 @Data

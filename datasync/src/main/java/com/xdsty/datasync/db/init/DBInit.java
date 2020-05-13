@@ -4,7 +4,7 @@ import com.xdsty.datasync.pojo.DBInfo;
 import java.sql.SQLException;
 
 /**
- * @author 张富华 (fuhua.zhang@ucarinc.com)
+ * @author 张富华
  * @date 2020/3/25 16:15
  */
 public interface DBInit {

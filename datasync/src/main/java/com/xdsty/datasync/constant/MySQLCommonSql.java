@@ -7,7 +7,7 @@ import com.xdsty.datasync.pojo.Index;
 import java.text.MessageFormat;
 
 /**
- * @author 张富华 (fuhua.zhang@ucarinc.com)
+ * @author 张富华
  * @date 2020/3/17 16:21
  */
 public class MySQLCommonSql {
@@ -69,6 +69,11 @@ public class MySQLCommonSql {
      */
     private static final String DROP_COLUMN = "ALTER TABLE {0} DROP COLUMN {1}";
 
+    /**
+     * 表的字段信息
+     */
+    private static final String COLUMN_SCHEMA = "SELECT * from information_schema.columns WHERE table_name = '{0}'";
+
     public static String getSelectTableSql(){
         return SELECT_TABLES;
     }
@@ -119,5 +124,9 @@ public class MySQLCommonSql {
 
     public static String getDropIndex(Index index){
         return MessageFormat.format(DROP_INDEX, index.getTableName(), index.getIndexName());
+    }
+
+    public static String getColumnSchema(String tableName){
+        return MessageFormat.format(COLUMN_SCHEMA, tableName);
     }
 }

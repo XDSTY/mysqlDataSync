@@ -1,7 +1,7 @@
 package com.xdsty.datasync.enums;
 
 /**
- * @author 张富华 (fuhua.zhang@ucarinc.com)
+ * @author 张富华
  * @date 2020/4/2 10:42
  */
 public enum DbTypeEnum {

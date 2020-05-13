@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * @author 张富华 (fuhua.zhang@ucarinc.com)
+ * @author 张富华
  * @date 2020/4/2 11:14
  */
 @RestController

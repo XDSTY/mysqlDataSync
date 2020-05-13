@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * @author 张富华 (fuhua.zhang@ucarinc.com)
+ * @author 张富华
  * @date 2020/3/20 16:29
  */
 @Component
@@ -44,7 +44,7 @@ public class MySQLToMySQLSync implements DBSync {
     public void sync(DBInfo fromDbInfo, DBInfo toDbInfo) throws SQLException, ClassNotFoundException {
         initDBInfo(fromDbInfo, toDbInfo);
         syncStructure(fromDbInfo, toDbInfo);
-        syncData(fromDbInfo, toDbInfo);
+     //   syncData(fromDbInfo, toDbInfo);
     }
 
     /**

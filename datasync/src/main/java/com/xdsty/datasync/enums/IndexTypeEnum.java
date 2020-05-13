@@ -1,7 +1,7 @@
 package com.xdsty.datasync.enums;
 
 /**
- * @author 张富华 (fuhua.zhang@ucarinc.com)
+ * @author 张富华
  * @date 2020/3/23 10:05
  */
 public enum IndexTypeEnum {

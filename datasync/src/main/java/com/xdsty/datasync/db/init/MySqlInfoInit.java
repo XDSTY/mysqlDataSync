@@ -3,6 +3,7 @@ package com.xdsty.datasync.db.init;
 import com.xdsty.datasync.constant.MySQLCommonSql;
 import com.xdsty.datasync.enums.IndexTypeEnum;
 import com.xdsty.datasync.pojo.Column;
+import com.xdsty.datasync.pojo.ColumnSchema;
 import com.xdsty.datasync.pojo.DBInfo;
 import com.xdsty.datasync.pojo.Index;
 import com.xdsty.datasync.pojo.MTable;
@@ -23,7 +24,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * @author 张富华 (fuhua.zhang@ucarinc.com)
+ * @author 张富华
  * @date 2020/3/17 16:06
  */
 @Component
@@ -108,6 +109,47 @@ public class MySqlInfoInit implements DBInit {
             table.setColumns(columns.stream().sorted(Comparator.comparing(Column::getColumnName)).collect(Collectors.toList()));
         }
     }
+
+    /**
+     * 根据schema初始化表信息
+     * @param dbInfo 数据库
+     */
+    private void initTableColumnWithSchema(DBInfo dbInfo) throws SQLException {
+        if(CollectionUtils.isEmpty(dbInfo.getTables())){
+            return;
+        }
+        Connection conn = dbInfo.getConnection();
+        for(MTable table : dbInfo.getTables()){
+            ResultSet set = conn.prepareStatement(MySQLCommonSql.getColumnSchema(table.getTableName())).executeQuery();
+            List<ColumnSchema> columns = new LinkedList<>();
+            while (set.next()){
+                ColumnSchema column = new ColumnSchema();
+                column.setTableCatalog(set.getString(ColumnSchema.TABLE_CATALOG));
+                column.setTableSchema(set.getString(ColumnSchema.TABLE_SCHEMA));
+                column.setTableName(set.getString(ColumnSchema.TABLE_NAME));
+                column.setColumnName(set.getString(ColumnSchema.COLUMN_NAME));
+                column.setOrdinalPosition(set.getInt(ColumnSchema.ORDINAL_POSITION));
+                column.setColumnDefault(set.getString(ColumnSchema.COLUMN_DEFAULT));
+                column.setNullable(set.getString(ColumnSchema.IS_NULLABLE));
+                column.setDataType(set.getString(ColumnSchema.DATA_TYPE));
+                column.setCharacterMaximumLength(set.getInt(ColumnSchema.CHARACTER_MAXIMUM_LENGTH));
+                column.setCharacterOctetLength(set.getInt(ColumnSchema.CHARACTER_OCTET_LENGTH));
+                column.setNumericPrecision(set.getInt(ColumnSchema.NUMERIC_PRECISION));
+                column.setNumericScale(set.getInt(ColumnSchema.NUMERIC_SCALE));
+                column.setCharacterSetName(set.getString(ColumnSchema.CHARACTER_SET_NAME));
+                column.setCollationName(set.getString(ColumnSchema.COLLATION_NAME));
+                column.setColumnType(set.getString(ColumnSchema.COLUMN_TYPE));
+                column.setColumnKey(set.getString(ColumnSchema.COLUMN_KEY));
+                column.setExtra(set.getString(ColumnSchema.EXTRA));
+                column.setPrivileges(set.getString(ColumnSchema.PRIVILEGES));
+                column.setColumnComment(set.getString(ColumnSchema.COLUMN_COMMENT));
+                column.setGenerationExpressic(set.getString(ColumnSchema.GENERATION_EXPRESSIC));
+                columns.add(column);
+            }
+            table.setColumnSchemas(columns.stream().sorted(Comparator.comparing(ColumnSchema::getColumnName)).collect(Collectors.toList()));
+        }
+    }
+
 
     /**
      * 初始化表的索引信息

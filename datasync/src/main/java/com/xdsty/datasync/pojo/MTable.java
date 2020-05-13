@@ -4,7 +4,7 @@ import lombok.Data;
 import java.util.List;
 
 /**
- * @author 张富华 (fuhua.zhang@ucarinc.com)
+ * @author 张富华
  * @date 2020/3/18 15:51
  */
 @Data
@@ -42,6 +42,9 @@ public class MTable {
      * 表的列
      */
     private List<Column> columns;
+
+
+    private List<ColumnSchema> columnSchemas;
 
     /**
      * 索引列表
