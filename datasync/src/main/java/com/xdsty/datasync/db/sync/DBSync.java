@@ -11,6 +11,13 @@ import java.sql.SQLException;
 public interface DBSync {
 
     /**
+     * 同步库结构
+     * @param fromDbInfo 源数据库
+     * @param toDbInfo 目标数据库
+     */
+    void syncStructure(DBInfo fromDbInfo, DBInfo toDbInfo) throws SQLException;
+
+    /**
      * 同步数据入口
      * @param fromDbInfo 源数据库
      * @param toDbInfo 目标数据库

@@ -28,13 +28,17 @@ import java.util.stream.Collectors;
  * @date 2020/3/20 16:29
  */
 @Component
-public class MySQLToMySQLSync extends AbstractDBSync implements DBSync {
+public class MySQLToMySQLSync implements DBSync {
 
     private static final Logger log = LoggerFactory.getLogger(MySQLToMySQLSync.class);
 
+    private DBInit dbInit;
+
     @Autowired
     @Qualifier(value = "mySqlInfoInit")
-    private DBInit dbInit;
+    public void setDbInit(DBInit dbInit) {
+        this.dbInit = dbInit;
+    }
 
     @Override
     public void sync(DBInfo fromDbInfo, DBInfo toDbInfo) {
@@ -47,8 +51,14 @@ public class MySQLToMySQLSync extends AbstractDBSync implements DBSync {
         }
     }
 
-    @Override
-    public void initDBInfo(DBInfo fromDbInfo, DBInfo toDbInfo) throws SQLException, ClassNotFoundException {
+    /**
+     * 初始化数据库信息
+     * @param fromDbInfo 源db
+     * @param toDbInfo 目标db
+     * @throws SQLException
+     * @throws ClassNotFoundException
+     */
+    private void initDBInfo(DBInfo fromDbInfo, DBInfo toDbInfo) throws SQLException, ClassNotFoundException {
         try {
             dbInit.initDbInfo(fromDbInfo);
             dbInit.initDbInfo(toDbInfo);
@@ -61,15 +71,51 @@ public class MySQLToMySQLSync extends AbstractDBSync implements DBSync {
     @Override
     public void syncStructure(DBInfo fromDbInfo, DBInfo toDbInfo) throws SQLException {
         try {
-            syncTableInfo(fromDbInfo, toDbInfo);
+            log.error("开始同步数据库结构，源数据库{}, 目标数据库{}, 时间:{}",
+                    fromDbInfo.getUrl(), toDbInfo.getUrl(), DateUtil.date2String(new Date(), DateUtil.DATE_TIME_PATTERN));
+            try {
+                Map<String, MTable> fromTablesMap = fromDbInfo.getTables().stream().collect(Collectors.toMap(MTable::getTableName, a -> a));
+                Map<String, MTable> toTablesMap = toDbInfo.getTables().stream().collect(Collectors.toMap(MTable::getTableName, a -> a));
+
+                MTable table;
+                for(MTable fromTable : fromDbInfo.getTables()){
+                    table = toTablesMap.get(fromTable.getTableName());
+                    // 新建
+                    if(table == null){
+                        createTargetTable(fromTable, toDbInfo.getConnection());
+                    }else{
+                        // 同步结构
+                        syncColumn(fromTable, table, toDbInfo.getConnection());
+                        syncIndex(fromTable, table, toDbInfo.getConnection());
+                    }
+                }
+                for(MTable toTable : toDbInfo.getTables()){
+                    table = fromTablesMap.get(toTable.getTableName());
+                    if(table == null){
+                        deleteTable(toTable, toDbInfo.getConnection());
+                    }
+                }
+                //同步完后需要更新目标数据库的tables
+                toDbInfo.setTables(fromDbInfo.getTables());
+            }catch (SQLException e){
+                log.error("数据库结构同步失败，源数据库{}, 目标数据库{}", fromDbInfo.getUrl(), toDbInfo.getUrl(), e);
+                throw e;
+            }
+            log.error("数据库结构同步成功，源数据库{}, 目标数据库{}, 时间: {}",
+                    fromDbInfo.getUrl(), toDbInfo.getUrl(), DateUtil.date2String(new Date(), DateUtil.DATE_TIME_PATTERN));
         } catch (SQLException e) {
             log.error("数据库结构同步失败", e);
             throw e;
         }
     }
 
-    @Override
-    public void syncData(DBInfo fromDbInfo, DBInfo toDbInfo) throws SQLException {
+    /**
+     * 同步数据
+     * @param fromDbInfo
+     * @param toDbInfo
+     * @throws SQLException
+     */
+    private void syncData(DBInfo fromDbInfo, DBInfo toDbInfo) throws SQLException {
         try {
             assembleSql(fromDbInfo, toDbInfo);
             executeBatchInsert(toDbInfo);
@@ -81,13 +127,25 @@ public class MySQLToMySQLSync extends AbstractDBSync implements DBSync {
         }
     }
 
-    @Override
-    public void assembleSql(DBInfo fromDbInfo, DBInfo toDbInfo) throws SQLException {
+    /**
+     * 设置sql
+     * @param fromDbInfo
+     * @param toDbInfo
+     * @throws SQLException
+     */
+    private void assembleSql(DBInfo fromDbInfo, DBInfo toDbInfo) throws SQLException {
         for (int i = 0; i < fromDbInfo.getTables().size(); i++) {
             toDbInfo.getTables().get(i).setInsertSql(assembleTableSql(fromDbInfo.getTables().get(i), fromDbInfo.getConnection()));
         }
     }
 
+    /**
+     * 拼接表的数据sql
+     * @param table 表
+     * @param conn 数据库connection
+     * @return 数据sql
+     * @throws SQLException
+     */
     private String assembleTableSql(MTable table, Connection conn) throws SQLException {
         log.error("开始复制{},数据,{}", table.getTableName(), DateUtil.date2String(new Date(), DateUtil.DATE_TIME_PATTERN));
         //根据表的列拼接处查询sql
@@ -134,8 +192,12 @@ public class MySQLToMySQLSync extends AbstractDBSync implements DBSync {
         return insertSql.toString();
     }
 
-    @Override
-    public void executeBatchInsert(DBInfo toDbInfo) throws SQLException {
+    /**
+     * 执行更新sql
+     * @param toDbInfo 目标db
+     * @throws SQLException
+     */
+    private void executeBatchInsert(DBInfo toDbInfo) throws SQLException {
         Connection conn = toDbInfo.getConnection();
         for (MTable table : toDbInfo.getTables()) {
             if(StringUtils.isEmpty(table.getInsertSql())){
@@ -153,8 +215,13 @@ public class MySQLToMySQLSync extends AbstractDBSync implements DBSync {
         }
     }
 
-    @Override
-    public void createTargetTable(MTable table, Connection conn) throws SQLException {
+    /**
+     * 创建目标表
+     * @param table 表
+     * @param conn 目标数据库connection
+     * @throws SQLException
+     */
+    private void createTargetTable(MTable table, Connection conn) throws SQLException {
         try {
             executeSql(table.getCreateTableSql(), conn);
         } catch (SQLException e) {
@@ -163,13 +230,24 @@ public class MySQLToMySQLSync extends AbstractDBSync implements DBSync {
         }
     }
 
-    @Override
-    void deleteTable(MTable table, Connection conn) throws SQLException {
+    /**
+     * 删除表
+     * @param table 表
+     * @param conn 数据库连接
+     * @throws SQLException
+     */
+    private void deleteTable(MTable table, Connection conn) throws SQLException {
         executeSql(MySQLCommonSql.getDropTable(table.getTableName()), conn);
     }
 
-    @Override
-    public void syncColumn(MTable fromTable, MTable toTable, Connection conn) throws SQLException {
+    /**
+     * 同步表column
+     * @param fromTable 源表
+     * @param toTable 目标表
+     * @param conn 数据库连接
+     * @throws SQLException
+     */
+    private void syncColumn(MTable fromTable, MTable toTable, Connection conn) throws SQLException {
         List<Column> fromColumns = fromTable.getColumns();
         List<Column> toColumns = toTable.getColumns();
         Map<String, Column> fromColumnMap = fromColumns.stream().collect(Collectors.toMap(Column::getColumnName, a -> a));
@@ -226,8 +304,7 @@ public class MySQLToMySQLSync extends AbstractDBSync implements DBSync {
         executeSql(MySQLCommonSql.getDropColumn(column), conn);
     }
 
-    @Override
-    public void syncIndex(MTable fromTable, MTable toTable, Connection conn) throws SQLException {
+    private void syncIndex(MTable fromTable, MTable toTable, Connection conn) throws SQLException {
         Map<String, Index> fromTableIndexMap = fromTable.getIndices().stream().collect(Collectors.toMap(Index::getIndexName, a -> a));
         Map<String, Index> toTableIndexMap = toTable.getIndices().stream().collect(Collectors.toMap(Index::getIndexName, a -> a));
         Index idx;
