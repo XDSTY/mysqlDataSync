@@ -96,8 +96,18 @@ public class MySQLCommonSql {
      */
     private static final String TABLE_ENGINE = "ALTER TABLE {0} ENGINE = {1}";
 
-
+    /**
+     * 获取索引的schema
+     */
     private static final String TABLE_INDEX = "SELECT * from information_schema.STATISTICS WHERE TABLE_SCHEMA = \"{0}\" AND TABLE_NAME = \"{1}\"";
+
+    /**
+     * 添加主键索引
+     * {0} tableName
+     * {1} columnName
+     * {2} comment
+     */
+    private static final String PRIMARY_KEY = "ALTER TABLE {0} ADD PRIMARY KEY {1} {2}";
 
     public static String getSelectTableSql() {
         return SELECT_TABLES;
@@ -174,5 +184,12 @@ public class MySQLCommonSql {
 
     public static String getIndexSchema(String dbName, String tableName){
         return MessageFormat.format(TABLE_INDEX, dbName, tableName);
+    }
+
+    public static String getAddPrimaryKey(Index index){
+        return MessageFormat.format(PRIMARY_KEY,
+                index.getTableName(),
+                index.getColumnName(),
+                StringUtils.isNotEmpty(index.getIndexComment()) ? "COMMENT \"" + index.getIndexComment() + "\"" : "");
     }
 }

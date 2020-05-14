@@ -1,7 +1,6 @@
 package com.xdsty.datasync.db.init;
 
 import com.xdsty.datasync.constant.MySQLCommonSql;
-import com.xdsty.datasync.enums.IndexTypeEnum;
 import com.xdsty.datasync.pojo.Column;
 import com.xdsty.datasync.pojo.DBInfo;
 import com.xdsty.datasync.pojo.Index;
@@ -16,7 +15,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.LinkedList;
@@ -79,7 +77,7 @@ public class MySqlInfoInit implements DBInit {
                 list.add(set.getString(1));
             }
         } catch (SQLException e) {
-            log.error("获取数据库表失败，{}", e);
+            log.error("获取数据库表失败", e);
             throw e;
         }
         log.error("获取源数据库表成功，{}", DateUtil.date2String(new Date(), DateUtil.DATE_TIME_PATTERN));

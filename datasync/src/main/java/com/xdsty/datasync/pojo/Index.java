@@ -2,7 +2,7 @@ package com.xdsty.datasync.pojo;
 
 
 import lombok.Data;
-import lombok.ToString;
+import lombok.EqualsAndHashCode;
 import org.apache.commons.lang.StringUtils;
 
 /**
@@ -11,7 +11,7 @@ import org.apache.commons.lang.StringUtils;
  * @date 2020/3/21 16:51
  */
 @Data
-@ToString
+@EqualsAndHashCode
 public class Index {
 
     public static final String TABLE_NAME = "TABLE_NAME";
