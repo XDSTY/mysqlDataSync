@@ -33,11 +33,12 @@ public class MySqlInfoInit implements DBInit {
 
     @Override
     public void initDbInfo(DBInfo dbInfo) throws SQLException, ClassNotFoundException {
-        dbInfo.initConnection();
+        dbInfo.init();
+
         // 获取所有表
         initTableInfo(dbInfo);
         initTableColumnWithSchema(dbInfo);
-        initTableIndex(dbInfo);
+//        initTableIndex(dbInfo);
     }
 
     /**
@@ -55,6 +56,7 @@ public class MySqlInfoInit implements DBInit {
                 table.initTable(set.getString(2));
             }
             table.setTableName(tableName);
+            table.setDbInfo(dbInfo);
             tables.add(table);
         }
         dbInfo.setTables(tables);
@@ -88,12 +90,13 @@ public class MySqlInfoInit implements DBInit {
      * @param dbInfo 数据库
      */
     private void initTableColumnWithSchema(DBInfo dbInfo) throws SQLException {
+        log.error("开始初始化columns信息，{}", DateUtil.date2String(new Date(), DateUtil.DATE_TIME_PATTERN));
         if(CollectionUtils.isEmpty(dbInfo.getTables())){
             return;
         }
         Connection conn = dbInfo.getConnection();
         for(MTable table : dbInfo.getTables()){
-            ResultSet set = conn.prepareStatement(MySQLCommonSql.getColumnSchema(table.getTableName())).executeQuery();
+            ResultSet set = conn.prepareStatement(MySQLCommonSql.getColumnSchema(dbInfo.getDbName(), table.getTableName())).executeQuery();
             List<Column> columns = new LinkedList<>();
             while (set.next()){
                 Column column = new Column();
@@ -114,13 +117,12 @@ public class MySqlInfoInit implements DBInit {
                 column.setExtra(set.getString(Column.EXTRA));
                 column.setPrivileges(set.getString(Column.PRIVILEGES));
                 column.setColumnComment(set.getString(Column.COLUMN_COMMENT));
-                column.setGenerationExpressic(set.getString(Column.GENERATION_EXPRESSIC));
                 columns.add(column);
             }
             table.setColumns(columns.stream().sorted(Comparator.comparing(Column::getColumnName)).collect(Collectors.toList()));
         }
+        log.error("初始化columns信息完成，{}", DateUtil.date2String(new Date(), DateUtil.DATE_TIME_PATTERN));
     }
-
 
     /**
      * 初始化表的索引信息

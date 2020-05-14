@@ -84,7 +84,7 @@ public class MySQLToMySQLSync implements DBSync {
                         // 同步表的字符集、引擎、注释
                         syncTableInfo(fromTable, table);
                         // 同步column
-                        syncColumn(fromTable, table, toDbInfo.getConnection());
+                        syncColumns(fromTable, table, toDbInfo.getConnection());
                         // 同步索引
 //                        syncIndex(fromTable, table, toDbInfo.getConnection());
                     }
@@ -122,7 +122,7 @@ public class MySQLToMySQLSync implements DBSync {
         if(!fromTable.getEngine().equals(toTable.getEngine())){
             executeSql(MySQLCommonSql.getTableEngine(fromTable), conn);
         }
-        if(StringUtils.isNotEmpty(fromTable.getComment()) && fromTable.getComment().equals(toTable.getComment())){
+        if(!StringUtils.equals(fromTable.getComment(), toTable.getComment())){
             executeSql(MySQLCommonSql.getTableComment(fromTable), conn);
         }
     }
@@ -240,7 +240,7 @@ public class MySQLToMySQLSync implements DBSync {
      * @param toTable 目标表
      * @param conn 目标表数据库连接
      */
-    private void syncColumn(MTable fromTable, MTable toTable, Connection conn){
+    private void syncColumns(MTable fromTable, MTable toTable, Connection conn){
         List<Column> fromColumns = fromTable.getColumns();
         List<Column> toColumns = toTable.getColumns();
         Map<String, Column> fromColumnMap = fromColumns.stream().collect(Collectors.toMap(Column::getColumnName, c -> c));

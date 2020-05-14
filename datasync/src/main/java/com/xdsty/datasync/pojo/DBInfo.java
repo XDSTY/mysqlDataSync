@@ -34,6 +34,8 @@ public class DBInfo {
 
     private String password;
 
+    private String dbName;
+
     /**
      * 连接到数据库的connection
      */
@@ -44,8 +46,9 @@ public class DBInfo {
      */
     private List<MTable> tables;
 
-    public void initConnection() throws SQLException, ClassNotFoundException {
+    public void init() throws SQLException, ClassNotFoundException {
         connection = ConnUtil.getConnection(this);
+        dbName = url.substring(url.lastIndexOf('/') + 1);
     }
 
     public void destory() throws SQLException {

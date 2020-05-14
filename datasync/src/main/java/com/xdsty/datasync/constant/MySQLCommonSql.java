@@ -46,24 +46,26 @@ public class MySQLCommonSql {
      * {0} tableName
      * {1} columnName
      * {2} columnType
-     * {3} defaultValue
-     * {4} null or not null
-     * {5} auto_increment
-     * {6} comment
+     * {3} character set
+     * {4} defaultValue
+     * {5} null or not null
+     * {6} auto_increment
+     * {7} comment
      */
-    private static final String ALTER_COLUMN = "ALTER TABLE {0} MODIFY COLUMN {1} {2} {3} {4} {5} {6}";
+    private static final String ALTER_COLUMN = "ALTER TABLE {0} MODIFY COLUMN {1} {2} {3} {4} {5} {6} {7}";
 
     /**
      * 添加新的列
      * {0} tableName
      * {1} columnName
      * {2} columnType
-     * {3} defaultValue
-     * {4} null or not null
-     * {5} auto_increment
-     * {6} comment
+     * {3} character set
+     * {4} defaultValue
+     * {5} null or not null
+     * {6} auto_increment
+     * {7} comment
      */
-    private static final String ADD_COLUMN = "ALTER TABLE {0} ADD COLUMN {1} {2} {3} {4} {5} {6}";
+    private static final String ADD_COLUMN = "ALTER TABLE {0} ADD COLUMN {1} {2} {3} {4} {5} {6} {7}";
 
     /**
      * 添加普通索引
@@ -80,7 +82,7 @@ public class MySQLCommonSql {
     /**
      * 表的字段信息
      */
-    private static final String COLUMN_SCHEMA = "SELECT * from information_schema.columns WHERE table_name = '{0}'";
+    private static final String COLUMN_SCHEMA = "SELECT * from information_schema.columns WHERE TABLE_SCHEMA = \"{0}\" AND table_name = \"{1}\"";
 
     /**
      * 修改表字符集
@@ -90,7 +92,7 @@ public class MySQLCommonSql {
     /**
      * 修改表的注释
      */
-    private static final String TABLE_COMMENT = "ALTER TABLE {0} COMMENT {1}";
+    private static final String TABLE_COMMENT = "ALTER TABLE {0} COMMENT \"{1}\"";
 
     /**
      * 修改表引擎
@@ -122,10 +124,11 @@ public class MySQLCommonSql {
                 column.getTableName(),
                 column.getColumnName(),
                 column.getColumnType(),
+                StringUtils.isNotEmpty(column.getCharacterSetName()) ? "CHARACTER SET " + column.getCharacterSetName() : "",
                 column.getColumnDefault() != null ? "DEFAULT " + column.getColumnDefault() : "",
-                column.getNullable().equals("YES") ? "DEFAULT NULL" : "NOT NULL",
+                "NO".equals(column.getNullable()) ? "NOT NULL" : "DEFAULT NULL",
                 "auto_increment".equals(column.getExtra()) ? "auto_increment" : "",
-                StringUtils.isNotEmpty(column.getColumnComment()) ? "comment " + column.getColumnComment() : "");
+                StringUtils.isNotEmpty(column.getColumnComment()) ? "comment \"" + column.getColumnComment() + "\"" : "");
     }
 
     public static String getAddColumnSql(Column column) {
@@ -133,10 +136,11 @@ public class MySQLCommonSql {
                 column.getTableName(),
                 column.getColumnName(),
                 column.getColumnType(),
+                StringUtils.isNotEmpty(column.getCharacterSetName()) ? "CHARACTER SET " + column.getCharacterSetName() : "",
                 column.getColumnDefault() != null ? "DEFAULT " + column.getColumnDefault() : "",
-                column.getNullable().equals("YES") ? "DEFAULT NULL" : "NOT NULL",
+                "NO".equals(column.getNullable()) ? "NOT NULL" : "DEFAULT NULL",
                 "auto_increment".equals(column.getExtra()) ? "auto_increment" : "",
-                StringUtils.isNotEmpty(column.getColumnComment()) ? "comment " + column.getColumnComment() : "");
+                StringUtils.isNotEmpty(column.getColumnComment()) ? "comment \"" + column.getColumnComment() + "\"" : "");
     }
 
     public static String getDropColumn(Column column) {
@@ -158,8 +162,8 @@ public class MySQLCommonSql {
         return MessageFormat.format(DROP_INDEX, index.getTableName(), index.getIndexName());
     }
 
-    public static String getColumnSchema(String tableName) {
-        return MessageFormat.format(COLUMN_SCHEMA, tableName);
+    public static String getColumnSchema(String dbName, String tableName) {
+        return MessageFormat.format(COLUMN_SCHEMA, dbName, tableName);
     }
 
     public static String getTableCharset(MTable table){

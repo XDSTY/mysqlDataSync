@@ -29,7 +29,6 @@ public class Column {
     public static String EXTRA = "EXTRA";
     public static String PRIVILEGES = "PRIVILEGES";
     public static String COLUMN_COMMENT = "COLUMN_COMMENT";
-    public static String GENERATION_EXPRESSIC = "GENERATION_EXPRESSIC";
 
     /**
      * 所属表
@@ -116,9 +115,5 @@ public class Column {
      */
     private String columnComment;
 
-    /**
-     * 表达式
-     */
-    private String generationExpressic;
 
 }
