@@ -39,7 +39,7 @@ public class MySqlInfoInit implements DBInit {
         // 获取所有表
         initTableInfo(dbInfo);
         initTableColumnWithSchema(dbInfo);
-//        initTableIndex(dbInfo);
+        initTableIndex(dbInfo);
     }
 
     /**
@@ -140,7 +140,7 @@ public class MySqlInfoInit implements DBInit {
             LinkedList<Index> indices = new LinkedList<>();
             while (set.next()){
                 // 复合索引
-                if(CollectionUtils.isEmpty(indices) && indices.getLast().getIndexName().equals(set.getString(Index.INDEX_NAME))){
+                if(!CollectionUtils.isEmpty(indices) && indices.getLast().getIndexName().equals(set.getString(Index.INDEX_NAME))){
                     Index index = indices.getLast();
                     index.setColumnName(index.getColumnName() + "," + set.getString(Index.COLUMN_NAME));
                 } else {
