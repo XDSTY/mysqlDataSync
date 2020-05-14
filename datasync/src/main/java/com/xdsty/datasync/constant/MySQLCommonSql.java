@@ -7,7 +7,6 @@ import com.xdsty.datasync.pojo.Index;
 import com.xdsty.datasync.pojo.MTable;
 import org.apache.commons.lang.StringUtils;
 
-import javax.xml.crypto.dsig.spec.XSLTTransformParameterSpec;
 import java.text.MessageFormat;
 
 /**
@@ -126,7 +125,7 @@ public class MySQLCommonSql {
                 column.getColumnType(),
                 StringUtils.isNotEmpty(column.getCharacterSetName()) ? "CHARACTER SET " + column.getCharacterSetName() : "",
                 column.getColumnDefault() != null ? "DEFAULT " + column.getColumnDefault() : "",
-                "NO".equals(column.getNullable()) ? "NOT NULL" : "DEFAULT NULL",
+                "NO".equals(column.getNullable()) ? "NOT NULL" : "",
                 "auto_increment".equals(column.getExtra()) ? "auto_increment" : "",
                 StringUtils.isNotEmpty(column.getColumnComment()) ? "comment \"" + column.getColumnComment() + "\"" : "");
     }
@@ -138,7 +137,7 @@ public class MySQLCommonSql {
                 column.getColumnType(),
                 StringUtils.isNotEmpty(column.getCharacterSetName()) ? "CHARACTER SET " + column.getCharacterSetName() : "",
                 column.getColumnDefault() != null ? "DEFAULT " + column.getColumnDefault() : "",
-                "NO".equals(column.getNullable()) ? "NOT NULL" : "DEFAULT NULL",
+                "NO".equals(column.getNullable()) ? "NOT NULL" : "",
                 "auto_increment".equals(column.getExtra()) ? "auto_increment" : "",
                 StringUtils.isNotEmpty(column.getColumnComment()) ? "comment \"" + column.getColumnComment() + "\"" : "");
     }

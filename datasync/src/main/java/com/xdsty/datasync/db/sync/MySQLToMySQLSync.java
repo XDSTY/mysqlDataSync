@@ -241,6 +241,7 @@ public class MySQLToMySQLSync implements DBSync {
      * @param conn 目标表数据库连接
      */
     private void syncColumns(MTable fromTable, MTable toTable, Connection conn){
+        log.error("开始同步表{}，{}", fromTable.getTableName(), DateUtil.date2String(new Date(), DateUtil.DATE_TIME_PATTERN));
         List<Column> fromColumns = fromTable.getColumns();
         List<Column> toColumns = toTable.getColumns();
         Map<String, Column> fromColumnMap = fromColumns.stream().collect(Collectors.toMap(Column::getColumnName, c -> c));
@@ -274,6 +275,7 @@ public class MySQLToMySQLSync implements DBSync {
                 }
             }
         });
+        log.error("同步表{}完成，{}", fromTable.getTableName(), DateUtil.date2String(new Date(), DateUtil.DATE_TIME_PATTERN));
     }
 
     private void syncIndex(MTable fromTable, MTable toTable, Connection conn) throws SQLException {
