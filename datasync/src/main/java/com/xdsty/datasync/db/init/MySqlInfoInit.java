@@ -16,6 +16,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.LinkedList;
@@ -138,21 +139,23 @@ public class MySqlInfoInit implements DBInit {
             ResultSet set = conn.prepareStatement(MySQLCommonSql.getIndexSchema(dbInfo.getDbName(), table.getTableName())).executeQuery();
             LinkedList<Index> indices = new LinkedList<>();
             while (set.next()){
-//                // 复合索引
-//                if(!CollectionUtils.isEmpty(indices) && indices.getLast().getIndexName().equals(set.getString(Index.KEY_NAME))){
-//                    Index index = indices.getLast();
-//                    index.setColumn(index.getColumn() + "," + set.getString(Index.COLUMN_NAME));
-//                }else{
-//                    // 普通索引
-//                    Index index = new Index();
-//                    index.setColumn(set.getString(Index.COLUMN_NAME));
-//                    index.setIndexType(IndexTypeEnum.getIndexType(set.getString(Index.INDEX_TYPE)));
-//                    index.setIndexName(set.getString(Index.KEY_NAME));
-//                    index.setIdxUniqueType(set.getInt(Index.NON_UNIQUE));
-//                    index.setTableName(table.getTableName());
-//                    indices.add(index);
-//                }
-                
+                // 复合索引
+                if(CollectionUtils.isEmpty(indices) && indices.getLast().getIndexName().equals(set.getString(Index.INDEX_NAME))){
+                    Index index = indices.getLast();
+                    index.setColumnName(index.getColumnName() + "," + set.getString(Index.COLUMN_NAME));
+                } else {
+                    Index index = new Index();
+                    index.setTableName(set.getString(Index.TABLE_NAME));
+                    index.setNonUnique(set.getInt(Index.NON_UNIQUE));
+                    index.setIndexSchema(set.getString(Index.INDEX_SCHEMA));
+                    index.setIndexName(set.getString(Index.INDEX_NAME));
+                    index.setSeqInIndex(set.getInt(Index.SEQ_IN_INDEX));
+                    index.setColumnName(set.getString(Index.COLUMN_NAME));
+                    index.setNullable(set.getString(Index.NULLABLE));
+                    index.setIndexType(set.getString(Index.INDEX_TYPE));
+                    index.setIndexComment(set.getString(Index.INDEX_COMMENT));
+                    indices.add(index);
+                }
             }
             table.setIndices(indices.stream().sorted(Comparator.comparing(Index::getIndexName)).collect(Collectors.toList()));
         }

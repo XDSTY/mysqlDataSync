@@ -1,7 +1,5 @@
 package com.xdsty.datasync.constant;
 
-import com.xdsty.datasync.enums.IndexTypeEnum;
-import com.xdsty.datasync.enums.IndexUniqueTypeEnum;
 import com.xdsty.datasync.pojo.Column;
 import com.xdsty.datasync.pojo.Index;
 import com.xdsty.datasync.pojo.MTable;
@@ -63,8 +61,13 @@ public class MySQLCommonSql {
 
     /**
      * 添加普通索引
+     * {0} tableName
+     * {1} indexType  fulltext或者""
+     * {2} indexName
+     * {4} columns
+     * {5} comment
      */
-    private static final String ADD_INDEX = "ALTER TABLE {0} ADD {1} KEY {2} ({3})";
+    private static final String ADD_INDEX = "ALTER TABLE {0} ADD {1} KEY {2} ({3}) {5}";
 
     private static final String DROP_INDEX = "ALTER TABLE {0} DROP KEY {1}";
 
@@ -141,14 +144,12 @@ public class MySQLCommonSql {
     }
 
     public static String getAddIndex(Index index) {
-        String keyPre = IndexUniqueTypeEnum.UNIQUE.getValue().equals(index.getIdxUniqueType()) ?
-                IndexUniqueTypeEnum.UNIQUE.getKey() :
-                (IndexTypeEnum.FULLTEXT.getValue().equals(index.getIndexType()) ? IndexTypeEnum.FULLTEXT.getName() : "");
         return MessageFormat.format(ADD_INDEX,
                 index.getTableName(),
-                keyPre,
+                StringUtils.equals("FULLTEXT", index.getIndexType()) ? "FULLTEXT" : "",
                 index.getIndexName(),
-                index.getColumn());
+                index.getColumnName(),
+                StringUtils.isNotEmpty(index.getIndexComment()) ? "COMMENT \"" + index.getIndexComment() + "\"" : "");
     }
 
     public static String getDropIndex(Index index) {
