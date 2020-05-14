@@ -1,10 +1,9 @@
 package com.xdsty.datasync.pojo;
 
 
-import com.xdsty.datasync.enums.IndexTypeEnum;
-import com.xdsty.datasync.enums.IndexUniqueTypeEnum;
 import lombok.Data;
 import lombok.ToString;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * 表索引
@@ -15,26 +14,15 @@ import lombok.ToString;
 @ToString
 public class Index {
 
-    /**
-     * 是否是唯一索引
-     */
-    public static final String NON_UNIQUE = "Non_unique";
-
-    public static final String KEY_NAME = "Key_name";
-
-    public static final String COLUMN_NAME = "Column_name";
-
-    public static final String NULL = "Null";
-
-    /**
-     * 索引类型  BTREE/FULLTEXT
-     */
-    public static final String INDEX_TYPE = "Index_type";
-
-    /**
-     * 主键的Key_name
-     */
-    public static final String PRIMARY = "PRIMARY";
+    public static final String TABLE_NAME = "TABLE_NAME";
+    public static final String NON_UNIQUE = "NON_UNIQUE";
+    public static final String INDEX_SCHEMA = "INDEX_SCHEMA";
+    public static final String INDEX_NAME = "INDEX_NAME";
+    public static final String SEQ_IN_INDEX = "SEQ_IN_INDEX";
+    public static final String COLUMN_NAME = "COLUMN_NAME";
+    public static final String NULLABLE = "NULLABLE";
+    public static final String INDEX_TYPE = "INDEX_TYPE";
+    public static final String INDEX_COMMENT = "INDEX_COMMENT";
 
     /**
      * 表名
@@ -42,54 +30,47 @@ public class Index {
     private String tableName;
 
     /**
+     * 唯一索引标识  0:唯一索引  1:非唯一索引
+     */
+    private Integer nonUnique;
+
+    /**
+     * 索引所在schema
+     */
+    private String indexSchema;
+
+    /**
      * 索引名
      */
     private String indexName;
 
     /**
-     * 是否是唯一索引
+     * 索引字段排序 复合索引中每个字段按照数字升序排序
+     * (a, b, c)  a的seqInIndex为1, b的为2, c的为3
      */
-    private Integer idxUniqueType;
+    private Integer seqInIndex;
 
     /**
-     * 列名 可能是复合索引 name, age
+     * 列名
      */
-    private String column;
+    private String columnName;
 
     /**
      * 是否可以为空
      */
-    private Boolean canBeNull;
+    private String nullable;
 
     /**
-     * 索引类型  普通索引/全文索引
+     * 索引类型
      */
-    private Integer indexType;
+    private String indexType;
 
     /**
-     * 默认值
+     * 索引注释
      */
-    private String defaultVal;
+    private String indexComment;
 
-    /**
-     * 是否是主键
-     */
     public boolean isPrimaryKey(){
-        return PRIMARY.equals(indexName);
+        return StringUtils.equals("PRIMARY", indexName);
     }
-
-    /**
-     * 是否是唯一索引
-     */
-    public boolean isUniqueKey(){
-        return IndexUniqueTypeEnum.UNIQUE.getValue().equals(idxUniqueType);
-    }
-
-    /**
-     * 是否是全文索引
-     */
-    public boolean isFullTextKey(){
-        return IndexTypeEnum.FULLTEXT.getValue().equals(indexType);
-    }
-
 }

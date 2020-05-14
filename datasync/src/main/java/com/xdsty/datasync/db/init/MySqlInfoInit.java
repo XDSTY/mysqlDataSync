@@ -135,23 +135,24 @@ public class MySqlInfoInit implements DBInit {
         Connection conn = dbInfo.getConnection();
         List<MTable> tables = dbInfo.getTables();
         for(MTable table : tables){
-            ResultSet set = conn.prepareStatement(MySQLCommonSql.getShowIndex(table.getTableName())).executeQuery();
+            ResultSet set = conn.prepareStatement(MySQLCommonSql.getIndexSchema(dbInfo.getDbName(), table.getTableName())).executeQuery();
             LinkedList<Index> indices = new LinkedList<>();
             while (set.next()){
-                // 复合索引
-                if(!CollectionUtils.isEmpty(indices) && indices.getLast().getIndexName().equals(set.getString(Index.KEY_NAME))){
-                    Index index = indices.getLast();
-                    index.setColumn(index.getColumn() + "," + set.getString(Index.COLUMN_NAME));
-                }else{
-                    // 普通索引
-                    Index index = new Index();
-                    index.setColumn(set.getString(Index.COLUMN_NAME));
-                    index.setIndexType(IndexTypeEnum.getIndexType(set.getString(Index.INDEX_TYPE)));
-                    index.setIndexName(set.getString(Index.KEY_NAME));
-                    index.setIdxUniqueType(set.getInt(Index.NON_UNIQUE));
-                    index.setTableName(table.getTableName());
-                    indices.add(index);
-                }
+//                // 复合索引
+//                if(!CollectionUtils.isEmpty(indices) && indices.getLast().getIndexName().equals(set.getString(Index.KEY_NAME))){
+//                    Index index = indices.getLast();
+//                    index.setColumn(index.getColumn() + "," + set.getString(Index.COLUMN_NAME));
+//                }else{
+//                    // 普通索引
+//                    Index index = new Index();
+//                    index.setColumn(set.getString(Index.COLUMN_NAME));
+//                    index.setIndexType(IndexTypeEnum.getIndexType(set.getString(Index.INDEX_TYPE)));
+//                    index.setIndexName(set.getString(Index.KEY_NAME));
+//                    index.setIdxUniqueType(set.getInt(Index.NON_UNIQUE));
+//                    index.setTableName(table.getTableName());
+//                    indices.add(index);
+//                }
+                
             }
             table.setIndices(indices.stream().sorted(Comparator.comparing(Index::getIndexName)).collect(Collectors.toList()));
         }

@@ -31,11 +31,6 @@ public class MySQLCommonSql {
     private static final String DROP_TABLE = "DROP TABLE ";
 
     /**
-     * 查询表的columns
-     */
-    private static final String SHOW_COLUMNS = "SHOW COLUMNS FROM ";
-
-    /**
      * 查询表的索引
      */
     private static final String SHOW_INDEX = "SHOW INDEX FROM ";
@@ -98,6 +93,9 @@ public class MySQLCommonSql {
      */
     private static final String TABLE_ENGINE = "ALTER TABLE {0} ENGINE = {1}";
 
+
+    private static final String TABLE_INDEX = "SELECT * from information_schema.STATISTICS WHERE TABLE_SCHEMA = \"{0}\" AND TABLE_NAME = \"{1}\"";
+
     public static String getSelectTableSql() {
         return SELECT_TABLES;
     }
@@ -108,10 +106,6 @@ public class MySQLCommonSql {
 
     public static String getDropTable(String tableName) {
         return DROP_TABLE + tableName;
-    }
-
-    public static String getSelectColumns(String tableName) {
-        return SHOW_COLUMNS + tableName;
     }
 
     public static String getShowIndex(String tableName) {
@@ -175,5 +169,9 @@ public class MySQLCommonSql {
 
     public static String getTableComment(MTable table){
         return MessageFormat.format(TABLE_COMMENT, table.getTableName(), table.getComment());
+    }
+
+    public static String getIndexSchema(String dbName, String tableName){
+        return MessageFormat.format(TABLE_INDEX, dbName, tableName);
     }
 }
