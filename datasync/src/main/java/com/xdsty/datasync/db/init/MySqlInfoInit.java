@@ -145,7 +145,6 @@ public class MySqlInfoInit implements DBInit {
                     Index index = new Index();
                     index.setTableName(set.getString(Index.TABLE_NAME));
                     index.setNonUnique(set.getInt(Index.NON_UNIQUE));
-                    index.setIndexSchema(set.getString(Index.INDEX_SCHEMA));
                     index.setIndexName(set.getString(Index.INDEX_NAME));
                     index.setSeqInIndex(set.getInt(Index.SEQ_IN_INDEX));
                     index.setColumnName(set.getString(Index.COLUMN_NAME));

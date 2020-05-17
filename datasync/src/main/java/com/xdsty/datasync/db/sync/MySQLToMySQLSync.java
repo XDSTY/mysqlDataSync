@@ -88,6 +88,7 @@ public class MySQLToMySQLSync implements DBSync {
                         syncColumns(fromTable, table, toDbInfo.getConnection());
                         // 同步索引
                         syncIndex(fromTable, table, toDbInfo.getConnection());
+                        afterIndexSync(fromTable, table, toDbInfo.getConnection());
                     }
                 }
                 for (MTable toTable : toDbInfo.getTables()) {
@@ -332,5 +333,30 @@ public class MySQLToMySQLSync implements DBSync {
             log.error("sql执行失败, sql: {}, ", sql, e);
             throw e;
         }
+    }
+
+    /**
+     * 同步完字段后置处理
+     * @param fromDbInfo 源数据库
+     * @param toDbInfo 目标数据库
+     */
+    private void afterColumnSync(DBInfo fromDbInfo, DBInfo toDbInfo){}
+
+    /**
+     * 同步完索引后置处理
+     * @param fromTable 源表
+     * @param toTable 目标表
+     * @param conn 目标表连接
+     */
+    private void afterIndexSync(MTable fromTable, MTable toTable, Connection conn){
+        //索引同步完后检查主键上是否有auto_increment
+        List<Column> autoIncrementColumns = fromTable.getColumns().stream().filter(e -> StringUtils.equals(e.getExtra(), "auto_increment")).collect(Collectors.toList());
+        autoIncrementColumns.forEach(column -> {
+            try {
+                executeSql(MySQLCommonSql.getAlterColumnWithAutoIncrement(column), conn);
+            } catch (SQLException e) {
+                log.error("Column{}修改失败", column, e);
+            }
+        });
     }
 }

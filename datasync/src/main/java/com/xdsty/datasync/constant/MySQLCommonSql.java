@@ -34,7 +34,19 @@ public class MySQLCommonSql {
     private static final String SHOW_INDEX = "SHOW INDEX FROM ";
 
     /**
-     * 修改列的类型或者默认值
+     * 修改列
+     * {0} tableName
+     * {1} columnName
+     * {2} columnType
+     * {3} character set
+     * {4} defaultValue
+     * {5} null or not null
+     * {6} comment
+     */
+    private static final String ALTER_COLUMN = "ALTER TABLE {0} MODIFY COLUMN {1} {2} {3} {4} {5} {6}";
+
+    /**
+     * 修改带有auto_increment的列
      * {0} tableName
      * {1} columnName
      * {2} columnType
@@ -44,7 +56,7 @@ public class MySQLCommonSql {
      * {6} auto_increment
      * {7} comment
      */
-    private static final String ALTER_COLUMN = "ALTER TABLE {0} MODIFY COLUMN {1} {2} {3} {4} {5} {6} {7}";
+    private static final String ALTER_COLUMN_AUTO_INCREMENT = "ALTER TABLE {0} MODIFY COLUMN {1} {2} {3} {4} {5} {6} {7}";
 
     /**
      * 添加新的列
@@ -54,20 +66,19 @@ public class MySQLCommonSql {
      * {3} character set
      * {4} defaultValue
      * {5} null or not null
-     * {6} auto_increment
-     * {7} comment
+     * {6} comment
      */
-    private static final String ADD_COLUMN = "ALTER TABLE {0} ADD COLUMN {1} {2} {3} {4} {5} {6} {7}";
+    private static final String ADD_COLUMN = "ALTER TABLE {0} ADD COLUMN {1} {2} {3} {4} {5} {6}";
 
     /**
      * 添加普通索引
      * {0} tableName
-     * {1} indexType  fulltext或者""
+     * {1} indexType  fulltext或者unique
      * {2} indexName
-     * {4} columns
-     * {5} comment
+     * {3} columns
+     * {4} comment
      */
-    private static final String ADD_INDEX = "ALTER TABLE {0} ADD {1} KEY {2} ({3}) {5}";
+    private static final String ADD_INDEX = "ALTER TABLE {0} ADD {1} KEY {2} ({3}) {4}";
 
     private static final String DROP_INDEX = "ALTER TABLE {0} DROP KEY {1}";
 
@@ -107,7 +118,7 @@ public class MySQLCommonSql {
      * {1} columnName
      * {2} comment
      */
-    private static final String PRIMARY_KEY = "ALTER TABLE {0} ADD PRIMARY KEY {1} {2}";
+    private static final String PRIMARY_KEY = "ALTER TABLE {0} ADD PRIMARY KEY ({1}) {2}";
 
     public static String getSelectTableSql() {
         return SELECT_TABLES;
@@ -133,7 +144,19 @@ public class MySQLCommonSql {
                 StringUtils.isNotEmpty(column.getCharacterSetName()) ? "CHARACTER SET " + column.getCharacterSetName() : "",
                 column.getColumnDefault() != null ? "DEFAULT " + column.getColumnDefault() : "",
                 "NO".equals(column.getNullable()) ? "NOT NULL" : "",
-                "auto_increment".equals(column.getExtra()) ? "auto_increment" : "",
+                StringUtils.isNotEmpty(column.getColumnComment()) ? "comment \"" + column.getColumnComment() + "\"" : "");
+    }
+
+
+    public static String getAlterColumnWithAutoIncrement(Column column){
+        return MessageFormat.format(ALTER_COLUMN_AUTO_INCREMENT,
+                column.getTableName(),
+                column.getColumnName(),
+                column.getColumnType(),
+                StringUtils.isNotEmpty(column.getCharacterSetName()) ? "CHARACTER SET " + column.getCharacterSetName() : "",
+                column.getColumnDefault() != null ? "DEFAULT " + column.getColumnDefault() : "",
+                "NO".equals(column.getNullable()) ? "NOT NULL" : "",
+                StringUtils.equals(column.getExtra(), "auto_increment") ? "auto_increment" : "",
                 StringUtils.isNotEmpty(column.getColumnComment()) ? "comment \"" + column.getColumnComment() + "\"" : "");
     }
 
@@ -145,7 +168,6 @@ public class MySQLCommonSql {
                 StringUtils.isNotEmpty(column.getCharacterSetName()) ? "CHARACTER SET " + column.getCharacterSetName() : "",
                 column.getColumnDefault() != null ? "DEFAULT " + column.getColumnDefault() : "",
                 "NO".equals(column.getNullable()) ? "NOT NULL" : "",
-                "auto_increment".equals(column.getExtra()) ? "auto_increment" : "",
                 StringUtils.isNotEmpty(column.getColumnComment()) ? "comment \"" + column.getColumnComment() + "\"" : "");
     }
 
@@ -156,7 +178,7 @@ public class MySQLCommonSql {
     public static String getAddIndex(Index index) {
         return MessageFormat.format(ADD_INDEX,
                 index.getTableName(),
-                StringUtils.equals("FULLTEXT", index.getIndexType()) ? "FULLTEXT" : "",
+                StringUtils.equals("FULLTEXT", index.getIndexType()) ? "FULLTEXT" : (index.getNonUnique() == 0 ? "UNIQUE" : ""),
                 index.getIndexName(),
                 index.getColumnName(),
                 StringUtils.isNotEmpty(index.getIndexComment()) ? "COMMENT \"" + index.getIndexComment() + "\"" : "");

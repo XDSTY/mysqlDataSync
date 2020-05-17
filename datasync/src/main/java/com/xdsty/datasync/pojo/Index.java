@@ -16,7 +16,6 @@ public class Index {
 
     public static final String TABLE_NAME = "TABLE_NAME";
     public static final String NON_UNIQUE = "NON_UNIQUE";
-    public static final String INDEX_SCHEMA = "INDEX_SCHEMA";
     public static final String INDEX_NAME = "INDEX_NAME";
     public static final String SEQ_IN_INDEX = "SEQ_IN_INDEX";
     public static final String COLUMN_NAME = "COLUMN_NAME";
@@ -33,11 +32,6 @@ public class Index {
      * 唯一索引标识  0:唯一索引  1:非唯一索引
      */
     private Integer nonUnique;
-
-    /**
-     * 索引所在schema
-     */
-    private String indexSchema;
 
     /**
      * 索引名
