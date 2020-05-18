@@ -156,7 +156,7 @@ public class MySQLCommonSql {
                 StringUtils.isNotEmpty(column.getCharacterSetName()) ? "CHARACTER SET " + column.getCharacterSetName() : "",
                 column.getColumnDefault() != null ? "DEFAULT " + column.getColumnDefault() : "",
                 "NO".equals(column.getNullable()) ? "NOT NULL" : "",
-                StringUtils.equals(column.getExtra(), "auto_increment") ? "auto_increment" : "",
+                StringUtils.isNotEmpty(column.getExtra()) ? column.getExtra() : "",
                 StringUtils.isNotEmpty(column.getColumnComment()) ? "comment \"" + column.getColumnComment() + "\"" : "");
     }
 
