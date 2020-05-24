@@ -3,10 +3,7 @@ package com.xdsty.datasync.db.sync;
 import com.xdsty.datasync.constant.Constant;
 import com.xdsty.datasync.constant.MySQLCommonSql;
 import com.xdsty.datasync.db.init.DBInit;
-import com.xdsty.datasync.pojo.Column;
-import com.xdsty.datasync.pojo.DBInfo;
-import com.xdsty.datasync.pojo.Index;
-import com.xdsty.datasync.pojo.MTable;
+import com.xdsty.datasync.pojo.*;
 import com.xdsty.datasync.util.DateUtil;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -42,9 +39,9 @@ public class MySQLToMySQLSync implements DBSync {
     }
 
     @Override
-    public void sync(DBInfo fromDbInfo, DBInfo toDbInfo) throws SQLException, ClassNotFoundException {
-        initDBInfo(fromDbInfo, toDbInfo);
-        syncStructure(fromDbInfo, toDbInfo);
+    public void sync(SyncContext syncContext) throws SQLException, ClassNotFoundException {
+        initDBInfo(syncContext.getFromDb(), syncContext.getDestDb());
+        syncStructure(syncContext.getFromDb(), syncContext.getDestDb());
         //   syncData(fromDbInfo, toDbInfo);
     }
 

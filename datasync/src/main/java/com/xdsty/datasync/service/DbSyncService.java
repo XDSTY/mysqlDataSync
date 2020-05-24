@@ -1,6 +1,7 @@
 package com.xdsty.datasync.service;
 
-import com.xdsty.datasync.pojo.DBInfo;
+import com.xdsty.datasync.pojo.SyncContext;
+
 import java.sql.SQLException;
 
 /**
@@ -11,9 +12,8 @@ public interface DbSyncService {
 
     /**
      * 开始同步数据库
-     * @param fromDbInfo 源数据库
-     * @param toDbInfo 目标数据库
+     * @param syncContext 源数据库
      */
-    boolean sync(DBInfo fromDbInfo, DBInfo toDbInfo) throws SQLException, ClassNotFoundException;
+    boolean sync(SyncContext syncContext) throws SQLException, ClassNotFoundException;
 
 }

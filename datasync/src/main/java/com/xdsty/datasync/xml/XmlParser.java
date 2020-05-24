@@ -51,7 +51,7 @@ public class XmlParser {
         }
     }
 
-    public static SyncContext getXmlDb() {
+    public static SyncContext getSyncContextFromXml() {
         SyncContext syncContext = new SyncContext();
         Element rootEle = document.getRootElement();
         List<Element> elements = rootEle.elements();

@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
-import java.util.List;
 
 /**
  * @author 张富华
@@ -27,9 +26,7 @@ public class TaskRunner implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) throws Exception {
         //读取解析xml文件
-        SyncContext syncContext = XmlParser.getXmlDb();
-        DBInfo fromDb = syncContext.getFromDb();
-        DBInfo destDb = syncContext.getDestDb();
-        syncService.sync(fromDb, destDb);
+        SyncContext syncContext = XmlParser.getSyncContextFromXml();
+        syncService.sync(syncContext);
     }
 }
