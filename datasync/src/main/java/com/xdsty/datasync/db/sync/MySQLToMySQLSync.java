@@ -349,11 +349,11 @@ public class MySQLToMySQLSync implements DBSync {
      * @param conn 目标表连接
      */
     private void afterIndexSync(MTable fromTable, MTable toTable, Connection conn){
-        //索引同步完后检查主键上是否有auto_increment
-        List<Column> autoIncrementColumns = fromTable.getColumns().stream().filter(e -> StringUtils.equals(e.getExtra(), "auto_increment")).collect(Collectors.toList());
-        autoIncrementColumns.forEach(column -> {
+        //索引同步完成后检查fromTable是否有extra字段不为空的column，主要是auto_increment必须建立在为key的column上
+        List<Column> extraColumns = fromTable.getColumns().stream().filter(e -> StringUtils.isNotEmpty(e.getExtra())).collect(Collectors.toList());
+        extraColumns.forEach(column -> {
             try {
-                executeSql(MySQLCommonSql.getAlterColumnWithAutoIncrement(column), conn);
+                executeSql(MySQLCommonSql.getAlterColumnWithExtra(column), conn);
             } catch (SQLException e) {
                 log.error("Column{}修改失败", column, e);
             }

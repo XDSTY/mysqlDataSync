@@ -148,7 +148,7 @@ public class MySQLCommonSql {
     }
 
 
-    public static String getAlterColumnWithAutoIncrement(Column column){
+    public static String getAlterColumnWithExtra(Column column){
         return MessageFormat.format(ALTER_COLUMN_AUTO_INCREMENT,
                 column.getTableName(),
                 column.getColumnName(),

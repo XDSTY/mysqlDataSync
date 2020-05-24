@@ -1,6 +1,7 @@
 package com.xdsty.datasync.runner;
 
 import com.xdsty.datasync.pojo.DBInfo;
+import com.xdsty.datasync.pojo.SyncContext;
 import com.xdsty.datasync.service.DbSyncService;
 import com.xdsty.datasync.xml.XmlParser;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,9 +27,9 @@ public class TaskRunner implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) throws Exception {
         //读取解析xml文件
-        List<DBInfo> dbInfos = XmlParser.getXmlDb();
-        DBInfo fromDb = dbInfos.get(0);
-        DBInfo targetDb = dbInfos.get(1);
-        syncService.sync(fromDb, targetDb);
+        SyncContext syncContext = XmlParser.getXmlDb();
+        DBInfo fromDb = syncContext.getFromDb();
+        DBInfo destDb = syncContext.getDestDb();
+        syncService.sync(fromDb, destDb);
     }
 }
