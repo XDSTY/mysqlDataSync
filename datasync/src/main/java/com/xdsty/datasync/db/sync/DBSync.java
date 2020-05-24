@@ -14,10 +14,16 @@ public interface DBSync {
 
     /**
      * 同步库结构
-     * @param fromDbInfo 源数据库
-     * @param toDbInfo 目标数据库
+     * @param syncContext 上下文信息
      */
-    void syncStructure(DBInfo fromDbInfo, DBInfo toDbInfo) throws SQLException;
+    void syncStructure(SyncContext syncContext) throws SQLException;
+
+    /**
+     * 同步数据
+     * @param syncContext 上下文信息
+     * @throws SQLException
+     */
+    void syncData(SyncContext syncContext) throws SQLException;
 
     /**
      * 同步数据入口

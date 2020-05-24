@@ -41,8 +41,9 @@ public class MySQLToMySQLSync implements DBSync {
     @Override
     public void sync(SyncContext syncContext) throws SQLException, ClassNotFoundException {
         initDBInfo(syncContext.getFromDb(), syncContext.getDestDb());
-        syncStructure(syncContext.getFromDb(), syncContext.getDestDb());
-        //   syncData(fromDbInfo, toDbInfo);
+        syncStructure(syncContext);
+        // 同步数据
+        syncData(syncContext);
     }
 
     /**
@@ -64,46 +65,67 @@ public class MySQLToMySQLSync implements DBSync {
     }
 
     @Override
-    public void syncStructure(DBInfo fromDbInfo, DBInfo toDbInfo) throws SQLException {
+    public void syncStructure(SyncContext syncContext) throws SQLException {
+        DBInfo fromDbInfo =syncContext.getFromDb();
+        DBInfo destDbInfo = syncContext.getDestDb();
         try {
             log.error("开始同步数据库结构，源数据库{}, 目标数据库{}, 时间:{}",
-                    fromDbInfo.getUrl(), toDbInfo.getUrl(), DateUtil.date2String(new Date(), DateUtil.DATE_TIME_PATTERN));
+                    fromDbInfo.getUrl(), destDbInfo.getUrl(), DateUtil.date2String(new Date(), DateUtil.DATE_TIME_PATTERN));
             try {
                 Map<String, MTable> fromTablesMap = fromDbInfo.getTables().stream().collect(Collectors.toMap(MTable::getTableName, a -> a));
-                Map<String, MTable> toTablesMap = toDbInfo.getTables().stream().collect(Collectors.toMap(MTable::getTableName, a -> a));
+                Map<String, MTable> toTablesMap = destDbInfo.getTables().stream().collect(Collectors.toMap(MTable::getTableName, a -> a));
 
                 MTable table;
                 for (MTable fromTable : fromDbInfo.getTables()) {
                     table = toTablesMap.get(fromTable.getTableName());
                     // 新建
                     if (table == null) {
-                        executeSql(fromTable.getCreateTableSql(), toDbInfo.getConnection());
+                        executeSql(fromTable.getCreateTableSql(), destDbInfo.getConnection());
                     } else {
                         // 同步表的字符集、引擎、注释
                         syncTableInfo(fromTable, table);
                         // 同步column
-                        syncColumns(fromTable, table, toDbInfo.getConnection());
+                        syncColumns(fromTable, table, destDbInfo.getConnection());
                         // 同步索引
-                        syncIndex(fromTable, table, toDbInfo.getConnection());
-                        afterIndexSync(fromTable, table, toDbInfo.getConnection());
+                        syncIndex(fromTable, table, destDbInfo.getConnection());
+                        afterIndexSync(fromTable, table, destDbInfo.getConnection());
                     }
                 }
-                for (MTable toTable : toDbInfo.getTables()) {
+                for (MTable toTable : destDbInfo.getTables()) {
                     table = fromTablesMap.get(toTable.getTableName());
                     if (table == null) {
-                        executeSql(MySQLCommonSql.getDropTable(toTable.getTableName()), toDbInfo.getConnection());
+                        executeSql(MySQLCommonSql.getDropTable(toTable.getTableName()), destDbInfo.getConnection());
                     }
                 }
                 //同步完后需要更新目标数据库的tables
-                toDbInfo.setTables(fromDbInfo.getTables());
+                destDbInfo.setTables(fromDbInfo.getTables());
             } catch (SQLException e) {
-                log.error("数据库结构同步失败，源数据库{}, 目标数据库{}", fromDbInfo.getUrl(), toDbInfo.getUrl(), e);
+                log.error("数据库结构同步失败，源数据库{}, 目标数据库{}", fromDbInfo.getUrl(), destDbInfo.getUrl(), e);
                 throw e;
             }
             log.error("数据库结构同步成功，源数据库{}, 目标数据库{}, 时间: {}",
-                    fromDbInfo.getUrl(), toDbInfo.getUrl(), DateUtil.date2String(new Date(), DateUtil.DATE_TIME_PATTERN));
+                    fromDbInfo.getUrl(), destDbInfo.getUrl(), DateUtil.date2String(new Date(), DateUtil.DATE_TIME_PATTERN));
         } catch (SQLException e) {
             log.error("数据库结构同步失败", e);
+            throw e;
+        }
+    }
+
+    @Override
+    public void syncData(SyncContext syncContext) throws SQLException {
+        DBInfo fromDb = syncContext.getFromDb(), destDb = syncContext.getDestDb();
+        fromDb.getTables().forEach(table -> {
+            try {
+                syncTable(syncContext.getDataSync(), table, fromDb.getConnection(), destDb.getConnection());
+            } catch (SQLException e) {
+                log.error("数据同步失败{}", table, e);
+            }
+        });
+        try {
+            fromDb.destory();
+            destDb.destory();
+        } catch (SQLException e) {
+            log.error("数据同步失败", e);
             throw e;
         }
     }
@@ -128,34 +150,26 @@ public class MySQLToMySQLSync implements DBSync {
     }
 
     /**
-     * 同步数据
-     *
-     * @param fromDbInfo
-     * @param toDbInfo
+     * 同步当前表数据
+     * @param syncInfo 同步信息
+     * @param fromTable 源表信息
+     * @param fromConn 源数据库conn
+     * @param toConn 目标数据库conn
      * @throws SQLException
      */
-    private void syncData(DBInfo fromDbInfo, DBInfo toDbInfo) throws SQLException {
-        try {
-            assembleSql(fromDbInfo, toDbInfo);
-            executeBatchInsert(toDbInfo);
-            fromDbInfo.destory();
-            toDbInfo.destory();
-        } catch (SQLException e) {
-            log.error("数据同步失败", e);
-            throw e;
-        }
-    }
-
-    /**
-     * 设置sql
-     *
-     * @param fromDbInfo
-     * @param toDbInfo
-     * @throws SQLException
-     */
-    private void assembleSql(DBInfo fromDbInfo, DBInfo toDbInfo) throws SQLException {
-        for (int i = 0; i < fromDbInfo.getTables().size(); i++) {
-            toDbInfo.getTables().get(i).setInsertSql(assembleTableSql(fromDbInfo.getTables().get(i), fromDbInfo.getConnection()));
+    private void syncTable(DataSyncInfo syncInfo, MTable fromTable, Connection fromConn, Connection toConn) throws SQLException {
+        LimitPage page = syncInfo == null ? null : new LimitPage();
+        for(int i = 0;; i++){
+            if(page != null){
+                page.setStartLimit(i * syncInfo.getLimit());
+                page.setEndLimit(page.getStartLimit() + syncInfo.getLimit());
+            }
+            String insertSql = assembleTableSql(fromTable, fromConn, page);
+            // 没有数据了
+            if(insertSql == null){
+                break;
+            }
+            executeSql(insertSql, toConn);
         }
     }
 
@@ -167,7 +181,7 @@ public class MySQLToMySQLSync implements DBSync {
      * @return 数据sql
      * @throws SQLException
      */
-    private String assembleTableSql(MTable table, Connection conn) throws SQLException {
+    private String assembleTableSql(MTable table, Connection conn, LimitPage page) throws SQLException {
         log.error("开始复制{},数据,{}", table.getTableName(), DateUtil.date2String(new Date(), DateUtil.DATE_TIME_PATTERN));
         //根据表的列拼接处查询sql
         StringBuilder selectSql = new StringBuilder("SELECT ");
@@ -177,6 +191,9 @@ public class MySQLToMySQLSync implements DBSync {
         }
         selectSql.append(columns.get(columns.size() - 1)).append(" ");
         selectSql.append("FROM ").append(table.getTableName());
+        if(page != null){
+            selectSql.append(" LIMIT ").append(page.getStartLimit()).append(", ").append(page.getEndLimit());
+        }
 
         StringBuilder insertSql = new StringBuilder("INSERT INTO ");
         insertSql.append(table.getTableName()).append("(");
@@ -211,30 +228,6 @@ public class MySQLToMySQLSync implements DBSync {
             throw e;
         }
         return insertSql.toString();
-    }
-
-    /**
-     * 执行更新sql
-     *
-     * @param toDbInfo 目标db
-     * @throws SQLException
-     */
-    private void executeBatchInsert(DBInfo toDbInfo) throws SQLException {
-        Connection conn = toDbInfo.getConnection();
-        for (MTable table : toDbInfo.getTables()) {
-            if (StringUtils.isEmpty(table.getInsertSql())) {
-                continue;
-            }
-            try {
-                PreparedStatement statement = conn.prepareStatement(table.getInsertSql());
-                statement.execute();
-                conn.commit();
-                statement.close();
-            } catch (SQLException e) {
-                log.error("目标数据库数据同步失败,表名:{}", table.getTableName());
-                throw e;
-            }
-        }
     }
 
     /**
