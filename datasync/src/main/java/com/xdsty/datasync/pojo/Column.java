@@ -1,14 +1,14 @@
 package com.xdsty.datasync.pojo;
 
-import lombok.Data;
 import lombok.EqualsAndHashCode;
+
+import java.util.stream.Stream;
 
 /**
  * column的schema
  * @author 张富华  
  * @date 2020/5/13 15:59
  */
-@Data
 @EqualsAndHashCode
 public class Column {
 
@@ -29,6 +29,8 @@ public class Column {
     public static String EXTRA = "EXTRA";
     public static String PRIVILEGES = "PRIVILEGES";
     public static String COLUMN_COMMENT = "COLUMN_COMMENT";
+
+    private static final String [] NUMERIC = {"tinyint", "smallint", "mediumint", "int", "integer", "bigint", "float", "double", "decimal"};
 
     /**
      * 所属表
@@ -115,5 +117,149 @@ public class Column {
      */
     private String columnComment;
 
+    /**
+     * 是否是数值类型
+     */
+    private Boolean isNumeric;
 
+    public Boolean isNumeric(){
+        return isNumeric;
+    }
+
+    public String getTableName() {
+        return tableName;
+    }
+
+    public void setTableName(String tableName) {
+        this.tableName = tableName;
+    }
+
+    public String getColumnName() {
+        return columnName;
+    }
+
+    public void setColumnName(String columnName) {
+        this.columnName = columnName;
+    }
+
+    public String getColumnDefault() {
+        return columnDefault;
+    }
+
+    public void setColumnDefault(String columnDefault) {
+        this.columnDefault = columnDefault;
+    }
+
+    public String getNullable() {
+        return nullable;
+    }
+
+    public void setNullable(String nullable) {
+        this.nullable = nullable;
+    }
+
+    public String getDataType() {
+        return dataType;
+    }
+
+    public void setDataType(String dataType) {
+        this.dataType = dataType;
+    }
+
+    public Integer getCharacterMaximumLength() {
+        return characterMaximumLength;
+    }
+
+    public void setCharacterMaximumLength(Integer characterMaximumLength) {
+        this.characterMaximumLength = characterMaximumLength;
+    }
+
+    public Integer getCharacterOctetLength() {
+        return characterOctetLength;
+    }
+
+    public void setCharacterOctetLength(Integer characterOctetLength) {
+        this.characterOctetLength = characterOctetLength;
+    }
+
+    public Integer getNumericPrecision() {
+        return numericPrecision;
+    }
+
+    public void setNumericPrecision(Integer numericPrecision) {
+        this.numericPrecision = numericPrecision;
+    }
+
+    public Integer getNumericScale() {
+        return numericScale;
+    }
+
+    public void setNumericScale(Integer numericScale) {
+        this.numericScale = numericScale;
+    }
+
+    public Integer getDatetimePrecision() {
+        return datetimePrecision;
+    }
+
+    public void setDatetimePrecision(Integer datetimePrecision) {
+        this.datetimePrecision = datetimePrecision;
+    }
+
+    public String getCharacterSetName() {
+        return characterSetName;
+    }
+
+    public void setCharacterSetName(String characterSetName) {
+        this.characterSetName = characterSetName;
+    }
+
+    public String getCollationName() {
+        return collationName;
+    }
+
+    public void setCollationName(String collationName) {
+        this.collationName = collationName;
+    }
+
+    public String getColumnType() {
+        return columnType;
+    }
+
+    public void setColumnType(String columnType) {
+        this.columnType = columnType;
+        this.isNumeric = Stream.of(NUMERIC).anyMatch(columnType::startsWith);
+    }
+
+    public String getColumnKey() {
+        return columnKey;
+    }
+
+    public void setColumnKey(String columnKey) {
+        this.columnKey = columnKey;
+    }
+
+    public String getExtra() {
+        return extra;
+    }
+
+    public void setExtra(String extra) {
+        this.extra = extra;
+    }
+
+    public String getPrivileges() {
+        return privileges;
+    }
+
+    public void setPrivileges(String privileges) {
+        this.privileges = privileges;
+    }
+
+    public String getColumnComment() {
+        return columnComment;
+    }
+
+    public void setColumnComment(String columnComment) {
+        this.columnComment = columnComment;
+    }
 }

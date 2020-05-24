@@ -43,7 +43,10 @@ public class MySQLToMySQLSync implements DBSync {
         initDBInfo(syncContext.getFromDb(), syncContext.getDestDb());
         syncStructure(syncContext);
         // 同步数据
-        syncData(syncContext);
+        if(syncContext.getDataSync() != null && "TRUE".equalsIgnoreCase(syncContext.getDataSync().getFlag())){
+            syncData(syncContext);
+        }
+        afterSync(syncContext);
     }
 
     /**
@@ -125,7 +128,7 @@ public class MySQLToMySQLSync implements DBSync {
             fromDb.destory();
             destDb.destory();
         } catch (SQLException e) {
-            log.error("数据同步失败", e);
+            log.error("数据库连接销毁失败", e);
             throw e;
         }
     }
@@ -158,6 +161,7 @@ public class MySQLToMySQLSync implements DBSync {
      * @throws SQLException
      */
     private void syncTable(DataSyncInfo syncInfo, MTable fromTable, Connection fromConn, Connection toConn) throws SQLException {
+        log.error("开始同步表{}数据, {}", fromTable.getTableName(), DateUtil.date2String(new Date(), DateUtil.DATE_SECOND_PATTERN));
         LimitPage page = syncInfo == null ? null : new LimitPage();
         for(int i = 0;; i++){
             if(page != null){
@@ -171,6 +175,7 @@ public class MySQLToMySQLSync implements DBSync {
             }
             executeSql(insertSql, toConn);
         }
+        log.error("同步表{}数据完成, {}", fromTable.getTableName(), DateUtil.date2String(new Date(), DateUtil.DATE_SECOND_PATTERN));
     }
 
     /**
@@ -182,14 +187,13 @@ public class MySQLToMySQLSync implements DBSync {
      * @throws SQLException
      */
     private String assembleTableSql(MTable table, Connection conn, LimitPage page) throws SQLException {
-        log.error("开始复制{},数据,{}", table.getTableName(), DateUtil.date2String(new Date(), DateUtil.DATE_TIME_PATTERN));
         //根据表的列拼接处查询sql
         StringBuilder selectSql = new StringBuilder("SELECT ");
-        List<String> columns = table.getColumns().stream().map(Column::getColumnName).collect(Collectors.toList());
+        List<Column> columns = table.getColumns();
         for (int i = 0; i < columns.size() - 1; i++) {
-            selectSql.append(columns.get(i)).append(Constant.COMMA);
+            selectSql.append(columns.get(i).getColumnName()).append(Constant.COMMA);
         }
-        selectSql.append(columns.get(columns.size() - 1)).append(" ");
+        selectSql.append(columns.get(columns.size() - 1).getColumnName()).append(" ");
         selectSql.append("FROM ").append(table.getTableName());
         if(page != null){
             selectSql.append(" LIMIT ").append(page.getStartLimit()).append(", ").append(page.getEndLimit());
@@ -198,9 +202,9 @@ public class MySQLToMySQLSync implements DBSync {
         StringBuilder insertSql = new StringBuilder("INSERT INTO ");
         insertSql.append(table.getTableName()).append("(");
         for (int i = 0; i < columns.size() - 1; i++) {
-            insertSql.append(columns.get(i)).append(Constant.COMMA);
+            insertSql.append(columns.get(i).getColumnName()).append(Constant.COMMA);
         }
-        insertSql.append(columns.get(columns.size() - 1)).append(") VALUES");
+        insertSql.append(columns.get(columns.size() - 1).getColumnName()).append(") VALUES");
 
         try {
             ResultSet set = conn.prepareStatement(selectSql.toString()).executeQuery();
@@ -209,17 +213,19 @@ public class MySQLToMySQLSync implements DBSync {
                 insertSql.append(firstRow ? "(" : ",(");
                 firstRow = false;
                 for (int i = 0; i < columns.size() - 1; i++) {
-                    insertSql.append("'").append(set.getString(columns.get(i))).append("'").append(Constant.COMMA);
+                    appendInsertSql(insertSql, set, columns.get(i));
+                    insertSql.append(Constant.COMMA);
                 }
-                insertSql.append("'").append(set.getString(columns.get(columns.size() - 1))).append("')");
+                appendInsertSql(insertSql, set, columns.get(columns.size() - 1));
+                insertSql.append(")");
             }
             // 没有数据
             if (firstRow) {
                 return null;
             }
             insertSql.append(" ON DUPLICATE KEY UPDATE ");
-            for (String column : columns) {
-                insertSql.append(column).append(" = VALUES(").append(column).append("),");
+            for (Column column : columns) {
+                insertSql.append(column.getColumnName()).append(" = VALUES(").append(column.getColumnName()).append("),");
             }
             insertSql.deleteCharAt(insertSql.length() - 1);
             set.close();
@@ -230,6 +236,19 @@ public class MySQLToMySQLSync implements DBSync {
         return insertSql.toString();
     }
 
+    private void appendInsertSql(StringBuilder insertSql, ResultSet set, Column column) throws SQLException {
+        String val = set.getString(column.getColumnName());
+        if(column.isNumeric()){
+            insertSql.append(StringUtils.isEmpty(val) ? "null" : Long.parseLong(val));
+        }else{
+            if(StringUtils.isEmpty(val)){
+                insertSql.append("null");
+            }else{
+                insertSql.append("'").append(set.getString(column.getColumnName())).append("'");
+            }
+        }
+    }
+
     /**
      * 同步表column
      *
@@ -238,7 +257,7 @@ public class MySQLToMySQLSync implements DBSync {
      * @param conn      目标表数据库连接
      */
     private void syncColumns(MTable fromTable, MTable toTable, Connection conn) {
-        log.error("开始同步表{}，{}", fromTable.getTableName(), DateUtil.date2String(new Date(), DateUtil.DATE_TIME_PATTERN));
+        log.error("开始同步表{}，{}", fromTable.getTableName(), DateUtil.date2String(new Date(), DateUtil.DATE_SECOND_PATTERN));
         List<Column> fromColumns = fromTable.getColumns();
         List<Column> toColumns = toTable.getColumns();
         Map<String, Column> fromColumnMap = fromColumns.stream().collect(Collectors.toMap(Column::getColumnName, c -> c));
@@ -272,7 +291,7 @@ public class MySQLToMySQLSync implements DBSync {
                 }
             }
         });
-        log.error("同步表{}完成，{}", fromTable.getTableName(), DateUtil.date2String(new Date(), DateUtil.DATE_TIME_PATTERN));
+        log.error("同步表{}完成，{}", fromTable.getTableName(), DateUtil.date2String(new Date(), DateUtil.DATE_SECOND_PATTERN));
     }
 
     private void syncIndex(MTable fromTable, MTable toTable, Connection conn) throws SQLException {
@@ -348,5 +367,13 @@ public class MySQLToMySQLSync implements DBSync {
                 log.error("Column{}修改失败", column, e);
             }
         });
+    }
+
+    /**
+     * 同步工作完成之后
+     * @param syncContext 同步上下文
+     */
+    private void afterSync(SyncContext syncContext){
+
     }
 }
