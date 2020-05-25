@@ -46,7 +46,6 @@ public class DateUtil {
      * @param pUtilDate java.util.Date
      * @param pFormat   日期格式
      * @return 字符串格式日期
-     * @Version1.0 2012-11-5 上午08:58:44 by 万久卫（jw.wan@zuche.com）
      */
 
     public static String date2String(Date pUtilDate, String pFormat) {
@@ -63,7 +62,6 @@ public class DateUtil {
      *
      * @param pUtilDate java.util.Date
      * @return 字符串格式日期
-     * @Version1.0 2012-11-5 上午08:58:58 by 万久卫（jw.wan@zuche.com）
      */
     public static String date2String(
             Date pUtilDate) {
@@ -84,7 +82,6 @@ public class DateUtil {
      *
      * @param pUtilDate java.util.Date
      * @return 字符串格式日期
-     * @Version1.0 2012-11-5 上午08:58:58 by 万久卫（jw.wan@zuche.com）
      */
     public static String date2SecondString(
             Date pUtilDate) {
@@ -96,7 +93,6 @@ public class DateUtil {
      *
      * @param dateStr
      * @return
-     * @Version1.0 2012-11-5 上午08:50:21 by 万久卫（jw.wan@zuche.com）
      */
     public static Date dateString2Date(String dateStr) {
         return dateString2Date(dateStr, DEFAULT_PATTERN);
@@ -107,7 +103,6 @@ public class DateUtil {
      *
      * @param dateStr
      * @return
-     * @Version1.0 2012-11-5 上午08:50:21 by 万久卫（jw.wan@zuche.com）
      */
     public static Date dateString2MinDate(String dateStr) {
         return dateString2Date(dateStr, DATE_TIME_PATTERN);
@@ -118,7 +113,6 @@ public class DateUtil {
      *
      * @param dateStr
      * @return
-     * @Version1.0 2012-11-5 上午08:50:21 by 万久卫（jw.wan@zuche.com）
      */
     public static Date dateString2SecondDate(String dateStr) {
         return dateString2Date(dateStr, DATE_SECOND_PATTERN);
@@ -130,7 +124,6 @@ public class DateUtil {
      * @param dateStr
      * @param partner
      * @return
-     * @Version1.0 2012-11-5 上午08:50:55 by 万久卫（jw.wan@zuche.com）
      */
     public static Date dateString2Date(String dateStr, String partner) {
 
@@ -165,7 +158,6 @@ public class DateUtil {
      *
      * @param pDate java.util.Date
      * @return int 月份
-     * @Version1.0 2012-11-5 上午08:52:14 by 万久卫（jw.wan@zuche.com）
      */
     public static int getMonthOfDate(Date pDate) {
         Calendar c = Calendar.getInstance();
@@ -178,7 +170,6 @@ public class DateUtil {
      *
      * @param date 字符串日期
      * @return int 月份
-     * @Version1.0 2012-11-5 上午08:53:22 by 万久卫（jw.wan@zuche.com）
      */
     public static int getMonthOfDate(String date) {
         return getMonthOfDate(dateString2Date(date));

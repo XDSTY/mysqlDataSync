@@ -1,6 +1,5 @@
 package com.xdsty.datasync.runner;
 
-import com.xdsty.datasync.pojo.DBInfo;
 import com.xdsty.datasync.pojo.SyncContext;
 import com.xdsty.datasync.service.DbSyncService;
 import com.xdsty.datasync.xml.XmlParser;
@@ -28,5 +27,8 @@ public class TaskRunner implements ApplicationRunner {
         //读取解析xml文件
         SyncContext syncContext = XmlParser.getSyncContextFromXml();
         syncService.sync(syncContext);
+
+        //注册定时任务
+        
     }
 }

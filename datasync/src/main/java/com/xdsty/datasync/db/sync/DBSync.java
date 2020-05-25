@@ -1,6 +1,5 @@
 package com.xdsty.datasync.db.sync;
 
-import com.xdsty.datasync.pojo.DBInfo;
 import com.xdsty.datasync.pojo.SyncContext;
 
 import java.sql.SQLException;
