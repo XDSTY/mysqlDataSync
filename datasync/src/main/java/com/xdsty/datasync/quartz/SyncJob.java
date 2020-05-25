@@ -14,9 +14,6 @@ import java.sql.SQLException;
  */
 public class SyncJob extends QuartzJobBean {
 
-    public SyncJob() {
-    }
-
     private DBSync dbSync;
 
     @Autowired
