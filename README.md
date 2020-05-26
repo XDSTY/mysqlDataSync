@@ -5,6 +5,7 @@ dataSync是一个将一个数据库的结构和数据同步到另外一个数据
 将dataSync.jar包和我们自定义的db.xml放在同一个文件夹下，执行java -jar dataSync.jar即可。
 
 db.xml文件参考如下
+```
 <?xml version="1.0" encoding="UTF-8"?>
 <dbs>
     <!-- 源数据库 -->
@@ -30,3 +31,4 @@ db.xml文件参考如下
         <limit>3000</limit>
     </data.sync>
 </dbs>
+```
