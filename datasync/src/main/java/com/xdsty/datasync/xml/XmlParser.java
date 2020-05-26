@@ -28,7 +28,7 @@ public class XmlParser {
     /**
      * xml文件地址
      */
-    private static final String XML_PATH = "./db.xml";
+    private static final String XML_PATH = "db.xml";
 
     private static final String FROM_DB = "from.db";
     private static final String DEST_DB = "dest.db";
