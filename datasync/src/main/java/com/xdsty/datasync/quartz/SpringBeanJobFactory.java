@@ -8,7 +8,6 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.scheduling.quartz.AdaptableJobFactory;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PreDestroy;
 
 /**
  * quartz的job的bean工厂
@@ -28,10 +27,5 @@ public class SpringBeanJobFactory extends AdaptableJobFactory implements Applica
         Object obj = super.createJobInstance(bundle);
         beanFactory.autowireBean(obj);
         return obj;
-    }
-
-    @PreDestroy
-    public void destroy(){
-        System.out.println("销毁");
     }
 }
