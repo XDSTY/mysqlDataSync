@@ -170,7 +170,7 @@ public class MySQLToMySQLSync implements DBSync {
             }
             String insertSql = assembleTableSql(fromTable, fromConn, page);
             // 没有数据了
-            if(insertSql == null){
+            if(StringUtils.isEmpty(insertSql)){
                 break;
             }
             executeSql(insertSql, toConn);
@@ -343,13 +343,6 @@ public class MySQLToMySQLSync implements DBSync {
             throw e;
         }
     }
-
-    /**
-     * 同步完字段后置处理
-     * @param fromDbInfo 源数据库
-     * @param toDbInfo 目标数据库
-     */
-    private void afterColumnSync(DBInfo fromDbInfo, DBInfo toDbInfo){}
 
     /**
      * 同步完索引后置处理

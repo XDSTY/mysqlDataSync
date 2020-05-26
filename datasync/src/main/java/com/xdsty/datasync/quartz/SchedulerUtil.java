@@ -1,8 +1,6 @@
 package com.xdsty.datasync.quartz;
 
-import com.xdsty.datasync.quartz.listener.SyncJobListener;
 import org.quartz.*;
-import org.quartz.impl.matchers.KeyMatcher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import org.springframework.stereotype.Component;
@@ -15,14 +13,7 @@ public class SchedulerUtil {
         this.schedulerFactoryBean = schedulerFactoryBean;
     }
 
-    @Autowired
-    public void setSyncJobListener(SyncJobListener syncJobListener) {
-        this.syncJobListener = syncJobListener;
-    }
-
     private SchedulerFactoryBean schedulerFactoryBean;
-
-    private SyncJobListener syncJobListener;
 
     public void addJob(SchedulerJob schedulerJob) throws SchedulerException {
         JobBuilder jobBuilder = JobBuilder.newJob(schedulerJob.getJobClazz())
@@ -41,7 +32,6 @@ public class SchedulerUtil {
 
         Scheduler scheduler = schedulerFactoryBean.getScheduler();
         scheduler.scheduleJob(jobDetail, trigger);
-        scheduler.getListenerManager().addJobListener(syncJobListener, KeyMatcher.keyEquals(JobKey.jobKey(schedulerJob.getJobKey())));
     }
 
 }

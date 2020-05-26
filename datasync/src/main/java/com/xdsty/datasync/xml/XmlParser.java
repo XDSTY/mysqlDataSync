@@ -12,9 +12,9 @@ import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.io.ClassPathResource;
 
-import java.io.IOException;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.List;
 
 /**
@@ -28,7 +28,7 @@ public class XmlParser {
     /**
      * xml文件地址
      */
-    private static final String XML_PATH = "db.xml";
+    private static final String XML_PATH = "./db.xml";
 
     private static final String FROM_DB = "from.db";
     private static final String DEST_DB = "dest.db";
@@ -41,16 +41,22 @@ public class XmlParser {
      */
     private static Document document;
 
-    static {
-        SAXReader saxReader = new SAXReader();
-        try {
-            document = saxReader.read(new ClassPathResource(XML_PATH).getInputStream());
-        } catch (DocumentException | IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     public static SyncContext getSyncContextFromXml() {
+        SAXReader saxReader = new SAXReader();
+        FileInputStream file = null;
+        try {
+             file = new FileInputStream(XML_PATH);
+        } catch (FileNotFoundException e) {
+            log.error("找不到db.xml文件");
+            DatasyncApplication.closeContext();
+        }
+        try {
+            document = saxReader.read(file);
+        } catch (DocumentException e) {
+            log.error("读取配置文件失败");
+            DatasyncApplication.closeContext();
+        }
+
         SyncContext syncContext = new SyncContext();
         Element rootEle = document.getRootElement();
         List<Element> elements = rootEle.elements();

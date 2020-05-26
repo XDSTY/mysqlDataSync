@@ -15,7 +15,7 @@
     <!-- 同步定时器 -->
     <corn>0 0/2 * * * ?</corn>
     <!-- 执行成功或失败后的邮件提醒 -->
-    <email>11@qq.com</email>
+    <email>792276627@qq.com</email>
     <data.sync>
         <!-- 是否开启数据同步 -->
         <flag>true</flag>
