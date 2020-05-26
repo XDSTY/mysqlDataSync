@@ -40,10 +40,9 @@ public class TaskRunner implements ApplicationRunner {
     public void run(ApplicationArguments args) throws Exception {
         //读取解析xml文件
         SyncContext syncContext = XmlParser.getSyncContextFromXml();
+        syncService.sync(syncContext);
         //注册定时任务
-        if(StringUtils.isEmpty(syncContext.getCorn())){
-            syncService.sync(syncContext);
-        } else {
+        if(StringUtils.isNotEmpty(syncContext.getCorn())) {
             SchedulerJob schedulerJob = new SchedulerJob();
             schedulerJob.setCron(syncContext.getCorn());
             schedulerJob.setJobClazz(SyncJob.class);
@@ -56,6 +55,5 @@ public class TaskRunner implements ApplicationRunner {
             schedulerJob.setParams(map);
             schedulerUtil.addJob(schedulerJob);
         }
-        
     }
 }
