@@ -43,7 +43,7 @@ public class MySQLToMySQLSync implements DBSync {
         initDBInfo(syncContext.getFromDb(), syncContext.getDestDb());
         syncStructure(syncContext);
         // 同步数据
-        if(syncContext.getDataSync() != null && "TRUE".equalsIgnoreCase(syncContext.getDataSync().getFlag())){
+        if (syncContext.getDataSync() != null && "TRUE".equalsIgnoreCase(syncContext.getDataSync().getFlag())) {
             syncData(syncContext);
         }
         afterSync(syncContext);
@@ -69,49 +69,44 @@ public class MySQLToMySQLSync implements DBSync {
 
     @Override
     public void syncStructure(SyncContext syncContext) throws SQLException {
-        DBInfo fromDbInfo =syncContext.getFromDb();
+        DBInfo fromDbInfo = syncContext.getFromDb();
         DBInfo destDbInfo = syncContext.getDestDb();
+        log.info("开始同步数据库结构, 时间:{}",
+                fromDbInfo.getUrl(), destDbInfo.getUrl(), DateUtil.date2String(new Date(), DateUtil.DATE_TIME_PATTERN));
         try {
-            log.error("开始同步数据库结构，源数据库{}, 目标数据库{}, 时间:{}",
-                    fromDbInfo.getUrl(), destDbInfo.getUrl(), DateUtil.date2String(new Date(), DateUtil.DATE_TIME_PATTERN));
-            try {
-                Map<String, MTable> fromTablesMap = fromDbInfo.getTables().stream().collect(Collectors.toMap(MTable::getTableName, a -> a));
-                Map<String, MTable> toTablesMap = destDbInfo.getTables().stream().collect(Collectors.toMap(MTable::getTableName, a -> a));
+            Map<String, MTable> fromTablesMap = fromDbInfo.getTables().stream().collect(Collectors.toMap(MTable::getTableName, a -> a));
+            Map<String, MTable> toTablesMap = destDbInfo.getTables().stream().collect(Collectors.toMap(MTable::getTableName, a -> a));
 
-                MTable table;
-                for (MTable fromTable : fromDbInfo.getTables()) {
-                    table = toTablesMap.get(fromTable.getTableName());
-                    // 新建
-                    if (table == null) {
-                        executeSql(fromTable.getCreateTableSql(), destDbInfo.getConnection());
-                    } else {
-                        // 同步表的字符集、引擎、注释
-                        syncTableInfo(fromTable, table);
-                        // 同步column
-                        syncColumns(fromTable, table, destDbInfo.getConnection());
-                        // 同步索引
-                        syncIndex(fromTable, table, destDbInfo.getConnection());
-                        afterIndexSync(fromTable, table, destDbInfo.getConnection());
-                    }
+            MTable table;
+            for (MTable fromTable : fromDbInfo.getTables()) {
+                table = toTablesMap.get(fromTable.getTableName());
+                // 新建
+                if (table == null) {
+                    executeSql(fromTable.getCreateTableSql(), destDbInfo.getConnection());
+                } else {
+                    // 同步表的字符集、引擎、注释
+                    syncTableInfo(fromTable, table);
+                    // 同步column
+                    syncColumns(fromTable, table, destDbInfo.getConnection());
+                    // 同步索引
+                    syncIndex(fromTable, table, destDbInfo.getConnection());
+                    afterIndexSync(fromTable, table, destDbInfo.getConnection());
                 }
-                for (MTable toTable : destDbInfo.getTables()) {
-                    table = fromTablesMap.get(toTable.getTableName());
-                    if (table == null) {
-                        executeSql(MySQLCommonSql.getDropTable(toTable.getTableName()), destDbInfo.getConnection());
-                    }
-                }
-                //同步完后需要更新目标数据库的tables
-                destDbInfo.setTables(fromDbInfo.getTables());
-            } catch (SQLException e) {
-                log.error("数据库结构同步失败，源数据库{}, 目标数据库{}", fromDbInfo.getUrl(), destDbInfo.getUrl(), e);
-                throw e;
             }
-            log.error("数据库结构同步成功，源数据库{}, 目标数据库{}, 时间: {}",
-                    fromDbInfo.getUrl(), destDbInfo.getUrl(), DateUtil.date2String(new Date(), DateUtil.DATE_TIME_PATTERN));
+            for (MTable toTable : destDbInfo.getTables()) {
+                table = fromTablesMap.get(toTable.getTableName());
+                if (table == null) {
+                    executeSql(MySQLCommonSql.getDropTable(toTable.getTableName()), destDbInfo.getConnection());
+                }
+            }
+            //同步完后需要更新目标数据库的tables
+            destDbInfo.setTables(fromDbInfo.getTables());
         } catch (SQLException e) {
-            log.error("数据库结构同步失败", e);
+            log.error("数据库结构同步失败，源数据库{}, 目标数据库{}", fromDbInfo.getUrl(), destDbInfo.getUrl(), e);
             throw e;
         }
+        log.info("数据库结构同步成功 时间: {}",
+                fromDbInfo.getUrl(), destDbInfo.getUrl(), DateUtil.date2String(new Date(), DateUtil.DATE_TIME_PATTERN));
     }
 
     @Override
@@ -154,28 +149,29 @@ public class MySQLToMySQLSync implements DBSync {
 
     /**
      * 同步当前表数据
-     * @param syncInfo 同步信息
+     *
+     * @param syncInfo  同步信息
      * @param fromTable 源表信息
-     * @param fromConn 源数据库conn
-     * @param toConn 目标数据库conn
+     * @param fromConn  源数据库conn
+     * @param toConn    目标数据库conn
      * @throws SQLException
      */
     private void syncTable(DataSyncInfo syncInfo, MTable fromTable, Connection fromConn, Connection toConn) throws SQLException {
-        log.error("开始同步表{}数据, {}", fromTable.getTableName(), DateUtil.date2String(new Date(), DateUtil.DATE_SECOND_PATTERN));
+        log.info("开始同步表{}数据, {}", fromTable.getTableName(), DateUtil.date2String(new Date(), DateUtil.DATE_SECOND_PATTERN));
         LimitPage page = syncInfo == null ? null : new LimitPage();
-        for(int i = 0;; i++){
-            if(page != null){
+        for (int i = 0; ; i++) {
+            if (page != null) {
                 page.setStartLimit(i * syncInfo.getLimit());
                 page.setEndLimit(page.getStartLimit() + syncInfo.getLimit());
             }
             String insertSql = assembleTableSql(fromTable, fromConn, page);
             // 没有数据了
-            if(StringUtils.isEmpty(insertSql)){
+            if (StringUtils.isEmpty(insertSql)) {
                 break;
             }
             executeSql(insertSql, toConn);
         }
-        log.error("同步表{}数据完成, {}", fromTable.getTableName(), DateUtil.date2String(new Date(), DateUtil.DATE_SECOND_PATTERN));
+        log.info("同步表{}数据完成, {}", fromTable.getTableName(), DateUtil.date2String(new Date(), DateUtil.DATE_SECOND_PATTERN));
     }
 
     /**
@@ -195,7 +191,7 @@ public class MySQLToMySQLSync implements DBSync {
         }
         selectSql.append(columns.get(columns.size() - 1).getColumnName()).append(" ");
         selectSql.append("FROM ").append(table.getTableName());
-        if(page != null){
+        if (page != null) {
             selectSql.append(" LIMIT ").append(page.getStartLimit()).append(", ").append(page.getEndLimit());
         }
 
@@ -238,12 +234,12 @@ public class MySQLToMySQLSync implements DBSync {
 
     private void appendInsertSql(StringBuilder insertSql, ResultSet set, Column column) throws SQLException {
         String val = set.getString(column.getColumnName());
-        if(column.isNumeric()){
+        if (column.isNumeric()) {
             insertSql.append(StringUtils.isEmpty(val) ? "null" : Long.parseLong(val));
-        }else{
-            if(StringUtils.isEmpty(val)){
+        } else {
+            if (StringUtils.isEmpty(val)) {
                 insertSql.append("null");
-            }else{
+            } else {
                 insertSql.append("'").append(set.getString(column.getColumnName())).append("'");
             }
         }
@@ -257,7 +253,7 @@ public class MySQLToMySQLSync implements DBSync {
      * @param conn      目标表数据库连接
      */
     private void syncColumns(MTable fromTable, MTable toTable, Connection conn) {
-        log.error("开始同步表{}，{}", fromTable.getTableName(), DateUtil.date2String(new Date(), DateUtil.DATE_SECOND_PATTERN));
+        log.info("开始同步表{}，{}", fromTable.getTableName(), DateUtil.date2String(new Date(), DateUtil.DATE_SECOND_PATTERN));
         List<Column> fromColumns = fromTable.getColumns();
         List<Column> toColumns = toTable.getColumns();
         Map<String, Column> fromColumnMap = fromColumns.stream().collect(Collectors.toMap(Column::getColumnName, c -> c));
@@ -291,10 +287,10 @@ public class MySQLToMySQLSync implements DBSync {
                 }
             }
         });
-        log.error("同步表{}完成，{}", fromTable.getTableName(), DateUtil.date2String(new Date(), DateUtil.DATE_SECOND_PATTERN));
+        log.info("同步表{}完成，{}", fromTable.getTableName(), DateUtil.date2String(new Date(), DateUtil.DATE_SECOND_PATTERN));
     }
 
-    private void syncIndex(MTable fromTable, MTable toTable, Connection conn) throws SQLException {
+    private void syncIndex(MTable fromTable, MTable toTable, Connection conn) {
         Map<String, Index> fromTableIndexMap = fromTable.getIndices().stream().collect(Collectors.toMap(Index::getIndexName, a -> a));
         Map<String, Index> toTableIndexMap = toTable.getIndices().stream().collect(Collectors.toMap(Index::getIndexName, a -> a));
 
@@ -346,11 +342,12 @@ public class MySQLToMySQLSync implements DBSync {
 
     /**
      * 同步完索引后置处理
+     *
      * @param fromTable 源表
-     * @param toTable 目标表
-     * @param conn 目标表连接
+     * @param toTable   目标表
+     * @param conn      目标表连接
      */
-    private void afterIndexSync(MTable fromTable, MTable toTable, Connection conn){
+    private void afterIndexSync(MTable fromTable, MTable toTable, Connection conn) {
         //索引同步完成后检查fromTable是否有extra字段不为空的column，主要是auto_increment必须建立在为key的column上
         List<Column> extraColumns = fromTable.getColumns().stream().filter(e -> StringUtils.isNotEmpty(e.getExtra())).collect(Collectors.toList());
         extraColumns.forEach(column -> {
@@ -364,9 +361,10 @@ public class MySQLToMySQLSync implements DBSync {
 
     /**
      * 同步工作完成之后
+     *
      * @param syncContext 同步上下文
      */
-    private void afterSync(SyncContext syncContext){
+    private void afterSync(SyncContext syncContext) {
 
     }
 }
