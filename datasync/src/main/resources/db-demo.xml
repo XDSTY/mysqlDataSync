@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dbs>
+    <!-- 源数据库 -->
+    <from.db id="origin">
+        <url>119.23.240.184:3306/test</url>
+        <username>root</username>
+        <password>Zhangfuhua123!</password>
+        <db.type>mysql</db.type>
+    </from.db>
+    <!-- 目标数据库 -->
+    <dest.db id="target">
+        <url>119.23.240.184:3306/test1</url>
+        <username>root</username>
+        <password>Zhangfuhua123!</password>
+        <db.type>mysql</db.type>
+    </dest.db>
+    <!-- 同步定时器 -->
+    <corn>0 0/2 * * * ?</corn>
+    <data.sync>
+        <!-- 是否开启数据同步 请勿用于大批量数据同步 -->
+        <flag>true</flag>
+        <!-- 每次同步数据条数 -->
+        <limit>3000</limit>
+    </data.sync>
+</dbs>
