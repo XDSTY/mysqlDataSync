@@ -67,7 +67,7 @@ public class MySqlInfoInit implements DBInit {
      * @return 表名列表
      */
     private List<String> getTableNames(Connection conn) throws SQLException {
-        log.error("开始获取源数据库表，{}", DateUtil.date2String(new Date(), DateUtil.DATE_SECOND_PATTERN));
+        log.info("开始获取源数据库表，{}", DateUtil.date2String(new Date(), DateUtil.DATE_SECOND_PATTERN));
         PreparedStatement statement;
         List<String> list = new LinkedList<>();
         try {
@@ -80,7 +80,7 @@ public class MySqlInfoInit implements DBInit {
             log.error("获取数据库表失败", e);
             throw e;
         }
-        log.error("获取源数据库表成功，{}", DateUtil.date2String(new Date(), DateUtil.DATE_SECOND_PATTERN));
+        log.info("获取源数据库表成功，{}", DateUtil.date2String(new Date(), DateUtil.DATE_SECOND_PATTERN));
         return list.stream().sorted(Comparator.comparing(String::toString)).collect(Collectors.toList());
     }
 
@@ -89,7 +89,7 @@ public class MySqlInfoInit implements DBInit {
      * @param dbInfo 数据库
      */
     private void initTableColumnWithSchema(DBInfo dbInfo) throws SQLException {
-        log.error("开始初始化columns信息，{}", DateUtil.date2String(new Date(), DateUtil.DATE_SECOND_PATTERN));
+        log.info("开始初始化columns信息，{}", DateUtil.date2String(new Date(), DateUtil.DATE_SECOND_PATTERN));
         if(CollectionUtils.isEmpty(dbInfo.getTables())){
             return;
         }
@@ -120,7 +120,7 @@ public class MySqlInfoInit implements DBInit {
             }
             table.setColumns(columns.stream().sorted(Comparator.comparing(Column::getColumnName)).collect(Collectors.toList()));
         }
-        log.error("初始化columns信息完成，{}", DateUtil.date2String(new Date(), DateUtil.DATE_SECOND_PATTERN));
+        log.info("初始化columns信息完成，{}", DateUtil.date2String(new Date(), DateUtil.DATE_SECOND_PATTERN));
     }
 
     /**
