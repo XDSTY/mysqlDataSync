@@ -12,9 +12,12 @@ import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.ClassPathResource;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
 /**
@@ -43,12 +46,18 @@ public class XmlParser {
 
     public static SyncContext getSyncContextFromXml() {
         SAXReader saxReader = new SAXReader();
-        FileInputStream file = null;
+        InputStream file = null;
         try {
              file = new FileInputStream(XML_PATH);
         } catch (FileNotFoundException e) {
-            log.error("找不到db.xml文件");
-            DatasyncApplication.closeContext();
+            log.error("找不到自定义的db.xml文件，开始寻找资源目录下的db.xml文件");
+            try {
+                file = new ClassPathResource(XML_PATH).getInputStream();
+                log.error("使用资源目录下的db.xml文件");
+            } catch (IOException e1) {
+                log.error("找不到db.xml文件，停止项目");
+                DatasyncApplication.closeContext();
+            }
         }
         try {
             document = saxReader.read(file);

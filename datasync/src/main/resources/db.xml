@@ -2,16 +2,16 @@
 <dbs>
     <!-- 源数据库 -->
     <from.db id="origin">
-        <url>ip:port/dbname</url>
+        <url>119.23.240.184:3306/test</url>
         <username>root</username>
-        <password>**</password>
+        <password>Zhangfuhua123!</password>
         <db.type>mysql</db.type>
     </from.db>
     <!-- 目标数据库 -->
     <dest.db id="target">
-        <url>ip:port/dbname</url>
+        <url>119.23.240.184:3306/test1</url>
         <username>root</username>
-        <password>**</password>
+        <password>Zhangfuhua123!</password>
         <db.type>mysql</db.type>
     </dest.db>
     <!-- 同步定时器 -->
