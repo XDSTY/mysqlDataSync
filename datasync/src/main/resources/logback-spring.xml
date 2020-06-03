@@ -2,6 +2,7 @@
 <configuration>
     <!-- 属性文件:在properties文件中找到对应的配置项 -->
     <springProperty scope="context" name="logging.path" source="logging.file.path"/>
+    <springProperty scope="context" name="project.name" source="project.name" />
     <contextName>datasync</contextName>
     <appender name="consoleLog" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
@@ -28,7 +29,7 @@
         <!--滚动策略-->
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <!--按时间保存日志 修改格式可以按小时、按天、月来保存-->
-            <fileNamePattern>${logging.path}/datasync.info.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>${logging.path}/${project.name}.info.%d{yyyy-MM-dd}.log</fileNamePattern>
             <!--保存时长-->
             <MaxHistory>90</MaxHistory>
             <!--文件大小-->
@@ -48,7 +49,7 @@
         <!--滚动策略-->
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <!--路径-->
-            <fileNamePattern>${logging.path}/datasync.error.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>${logging.path}/${project.name}.error.%d{yyyy-MM-dd}.log</fileNamePattern>
             <MaxHistory>90</MaxHistory>
         </rollingPolicy>
     </appender>
