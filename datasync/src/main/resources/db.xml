@@ -15,7 +15,7 @@
         <db.type>mysql</db.type>
     </dest.db>
     <!-- 同步定时器 -->
-    <corn>0 0/2 * * * ?</corn>
+    <corn>0 0/5 * * * ?</corn>
     <data.sync>
         <!-- 是否开启数据同步 请勿用于大批量数据同步 -->
         <flag>true</flag>
